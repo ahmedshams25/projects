@@ -75,6 +75,51 @@ textarea.in{padding:12px 14px;line-height:1.8;resize:vertical}
 @keyframes sk{to{background-position:-200% 0}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+
+<!-- استدعاء وحدات Firebase عبر CDN -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  // إعدادات Firebase الخاصة بك
+  const firebaseConfig = {
+    apiKey: "AIzaSyBCS0eZxI_ICC0-gBxvy4O5r8bqpDl_THM",
+    authDomain: "links-ae0ca.firebaseapp.com",
+    databaseURL: "https://links-ae0ca-default-rtdb.firebaseio.com",
+    projectId: "links-ae0ca",
+    storageBucket: "links-ae0ca.firebasestorage.app",
+    messagingSenderId: "156091937139",
+    appId: "1:156091937139:web:e97329efa9d81535b1d506",
+    measurementId: "G-DFGGM61SDT"
+  };
+
+  // تهيئة Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const dbRealtime = getDatabase(app);
+  const dbRef = ref(dbRealtime, 'dashData');
+
+  // ربط Firebase مع متغيرات التطبيق
+  window.saveToFirebase = function(data) {
+    set(dbRef, data).catch(err => {
+      console.error("خطأ أثناء الحفظ في Firebase:", err);
+    });
+  };
+
+  // الاستماع للتغييرات المباشرة في Firebase Realtime Database
+  onValue(dbRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val) {
+      window.D = {
+        clients: val.clients || [],
+        projects: val.projects || []
+      };
+      try { localStorage['dash.data'] = JSON.stringify(window.D); } catch(e){}
+      if (typeof window.render === 'function') window.render();
+    }
+  });
+</script>
 </head>
 <body>
 <div id="bgi"></div>
@@ -91,8 +136,21 @@ const P={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',plus
 const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
 const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const TYPES=['موشن جرافيك','مونتاج فيديو','لوجو أنيميشن','إنفوجرافيك','إعلان','فيديو شرح','تصميم ثابت','أخرى'],CATS=['شركة','وكالة','مؤسسة','ستارت أب','فرد'],CLS=[['VIP','--warn'],['منتظم','--ok'],['جديد','--tint'],['محتمل','--sub']],COL=['#0a84ff','#30d158','#bf5af2','#ff9f0a','#ff453a','#64d2ff'];
-let D=JSON.parse(L['dash.data']||'null')||{clients:[],projects:[]},view='home',q='',stack=[],charts=[],pt='script',cur,back='projects',FS,lastN=0;const U={};
-const save=()=>{try{L['dash.data']=JSON.stringify(D)}catch{toast('المساحة ممتلئة، احذف بعض الصور')}};
+window.D=JSON.parse(L['dash.data']||'null')||{clients:[],projects:[]};
+let view='home',q='',stack=[],charts=[],pt='script',cur,back='projects',FS,lastN=0;const U={};
+
+// الحفظ في LocalStorage وفي Firebase
+const save=()=>{
+  try{
+    L['dash.data']=JSON.stringify(window.D);
+  }catch{
+    toast('المساحة ممتلئة، احذف بعض الصور');
+  }
+  if(window.saveToFirebase) {
+    window.saveToFirebase(window.D);
+  }
+};
+
 const uid=()=>Math.random().toString(36).slice(2,9),cl=id=>D.clients.find(c=>c.id==id),pr=id=>D.projects.find(p=>p.id==id);
 const money=n=>(+n||0).toLocaleString('ar-EG')+' ج.م',dleft=d=>d?Math.round((new Date(d+'T00:00')-new Date().setHours(0,0,0,0))/864e5):null;
 const empty=m=>`<div class="sub" style="padding:20px;text-align:center">${m}</div>`,hd=(t,b)=>`<div class="hd"><h2>${t}</h2>${b}</div>`;
@@ -132,6 +190,7 @@ function draw(){charts.forEach(c=>c.destroy());charts=[];document.querySelectorA
  if(s){const h=x=>JSON.stringify({...x,logo:0}).toLowerCase();$('#main').innerHTML=hd('نتائج البحث','')+`<div class="lb">العملاء</div>`+secC(D.clients.filter(c=>h(c).includes(s)))+`<div style="height:14px"></div>`+secP(D.projects.filter(p=>(h(p)+(cl(p.client)?.name||'').toLowerCase()).includes(s)),'المشاريع');return}V[view]()}
 function render(){const y=scrollY;draw();if(view=='proj')scrollTo(0,y);const o=$('#ov'),st=o.firstChild?o.firstChild.scrollTop:0;if(!stack.length){o.className='';o.innerHTML='';lastN=0;return}o.className='on';o.innerHTML=`<div class="sh" role="dialog">${stack[stack.length-1]()}</div>`;o.firstChild.scrollTop=lastN==stack.length?st:0;lastN=stack.length;
  document.querySelectorAll('[data-f]').forEach(async e=>{const id=e.dataset.f;if(!U[id]){const b=await getF(id);if(!b)return;U[id]=URL.createObjectURL(b)}e.src=U[id]})}
+window.render = render;
 const go=v=>{view=v;q='';$('#q').value='';stack=[];render()},pop=()=>{stack.pop();render()},xb=`<button class="b ib" onclick="pop()" aria-label="إغلاق">${ic('x')}</button>`;
 const oc=id=>{stack.push(cSheet(id));render()},op=id=>{if(view!='proj')back=view;cur=id;view='proj';stack=[];q='';$('#q').value='';scrollTo(0,0);render()};
 /* نماذج */
@@ -177,12 +236,12 @@ function fin(id){const p=pr(id),d=p.status=='done';p.status=d?'active':'done';p.
 const g=k=>L['dash.'+k];
 function setK(k,v){try{L['dash.'+k]=v}catch{toast('الصورة كبيرة، جرّب صورة أصغر')}applySet()}
 function applySet(){const h=document.documentElement,t=g('theme')||'auto';h.dataset.theme=t;h.dataset.eff=t=='auto'?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t;h.dataset.grad=g('grad')=='0'?'off':'on';h.style.setProperty('--gc',g('gc')||'#3b9de8');h.style.setProperty('--go',(g('go')||100)+'%');h.style.setProperty('--gob',(g('go')||100)/100);const b=$('#bgi');b.style.backgroundImage=g('bg')?`url(${g('bg')})`:'none';b.style.filter=`blur(${g('bgb')||0}px)`;b.style.opacity=g('bg')?(g('bgo')||100)/100:0}
-const sg=(k,o,d)=>`<div class="seg" style="margin-bottom:16px">${o.map(t=>`<button class="${(g(k)||d)==t[0]?'on':''}" onclick="setK('${k}','${t[0]}');render()">${t[1]}</button>`).join('')}</div>`;
+const sg=(k,o,d)=>`<div class="seg" style="margin-bottom:16px">${o.map(t=>`<button class="${(g(k)\vert{}\vert{}d)==t[0]?'on':''}" onclick="setK('${k}','${t[0]}');render()">${t[1]}</button>`).join('')}</div>`;
 const sSheet=()=>`<div class="hd"><h3 style="margin:0">الإعدادات</h3>${xb}</div><div class="lb">المظهر</div>${sg('theme',[['auto','تلقائي'],['light','فاتح'],['dark','داكن']],'auto')}<div class="lb">خلفية متدرجة</div>${sg('grad',[['1','مفعّلة'],['0','معطّلة']],'1')}
 <div class="lb">لون التدرج</div><div class="acts" style="margin-bottom:16px;flex-wrap:wrap">${['#3b9de8','#30d158','#bf5af2','#ff9f0a','#ff453a','#64d2ff'].map(c=>`<button class="sw" style="background:${c}" aria-label="${c}" onclick="setK('gc','${c}');render()"></button>`).join('')}<input type="color" value="${g('gc')||'#3b9de8'}" oninput="setK('gc',this.value)" aria-label="لون مخصص" style="width:44px;height:34px;border:0;background:none;padding:0"></div>
 <div class="lb">صورة خلفية من الجهاز</div><div class="acts" style="margin-bottom:12px"><input type="file" accept="image/*" class="in" onchange="bgPick(this)">${g('bg')?`<button class="b d" onclick="delete L['dash.bg'];applySet();render()">إزالة</button>`:''}</div>
 <div class="lb">الضبابية</div><input type="range" min="0" max="40" value="${g('bgb')||0}" oninput="setK('bgb',this.value)" style="width:100%;margin-bottom:12px"><div class="lb">الوضوح</div><input type="range" min="0" max="100" value="${g('bgo')||100}" oninput="setK('bgo',this.value)" style="width:100%">
-<div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><p class="sub" style="margin-top:16px">كل البيانات والملفات محفوظة على هذا المتصفح فقط، فاستخدم نفس المتصفح دائماً.</p>`;
+<div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><p class="sub" style="margin-top:16px">بيانات التطبيق مزامنة سحابياً عبر Firebase ومتوفرة من أي جهاز.</p>`;
 const openS=()=>{stack.push(sSheet);render()},bgPick=i=>i.files[0]&&rs(i.files[0],2000,d=>{setK('bg',d);render()});
 function init(){try{applySet();$('#si').innerHTML=ic('search');$('#gb').innerHTML=ic('gear');$('.nv').innerHTML=[['home','الرئيسية','home'],['clients','العملاء','user'],['projects','المشاريع','film'],['archive','المحفوظات','archive']].map(x=>`<button data-v="${x[0]}" onclick="go('${x[0]}')">${ic(x[2],18)}${x[1]}</button>`).join('');render()}catch(e){$('#main').innerHTML=`<div class="card"><h3>تعذّر تحميل البيانات</h3><p class="sub">${E(e.message)}</p><button class="b p" onclick="init()">إعادة المحاولة</button></div>`}}
 applySet();matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{applySet();render()});onkeydown=e=>{if(e.key=='Escape'&&stack.length)pop()};setTimeout(init,300);
