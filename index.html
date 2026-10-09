@@ -1,796 +1,191 @@
 <!DOCTYPE html>
-
-<html lang="ar" dir="rtl">
-
+<html lang="ar" dir="rtl" data-theme="auto">
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>ClientChat - Professional Dashboard</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
-    <style>
-
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
-
-        body { font-family: 'IBM Plex Sans Arabic', sans-serif; background-color: #F8F9FE; overflow-x: hidden; }
-
-        .sidebar-active { background-color: #EEEAFB; color: #6366F1; border-radius: 12px; }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
-
-        .task-card { cursor: grab; transition: all 0.2s; position: relative; }
-
-        .project-view { display: none; }
-
-        .project-view.active { display: block; }
-
-        .chat-bubble { font-size: 14px; line-height: 1.6; max-width: 95%; }
-
-
-
-        @media (max-width: 1024px) {
-
-            aside { position: fixed; right: -100%; top: 0; height: 100%; transition: 0.3s; z-index: 50; }
-
-            aside.open { right: 0; }
-
-            .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
-
-            .overlay.active { display: block; }
-
-        }
-
-    </style>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>لوحة تحكم الموشن</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#fff;--ink:#1d1d1f;--sub:#6e6e73;--g:rgba(255,255,255,.55);--g2:rgba(255,255,255,.35);--st:rgba(255,255,255,.7);--hi:rgba(255,255,255,.8);--tint:#0a84ff;--ok:#30b45a;--warn:#ff9f0a;--bad:#ff453a;--sh:0 10px 40px rgba(40,60,140,.14);--gt:color-mix(in srgb,var(--gc,#3b9de8) 45%,#fff);--gg:color-mix(in srgb,var(--g) var(--go,100%),transparent);--gg2:color-mix(in srgb,var(--g2) var(--go,100%),transparent)}
+[data-eff=dark]{--bg:#000;--ink:#f5f5f7;--sub:#a1a1a6;--g:rgba(44,44,56,.5);--g2:rgba(70,70,88,.35);--st:rgba(255,255,255,.12);--hi:rgba(255,255,255,.14);--ok:#32d74b;--sh:0 10px 40px rgba(0,0,0,.5);--gt:color-mix(in srgb,var(--gc,#3b9de8) 20%,#000)}
+[data-grad=off]{--gt:var(--bg)}
+[data-grad=off][data-eff=light]{--st:rgba(60,60,67,.14);--g2:rgba(120,120,128,.1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,"SF Pro Text","Tajawal",system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:linear-gradient(180deg,var(--gt) 0%,var(--bg) 75%)}
+#bgi{position:fixed;inset:-40px;z-index:-1;background:center/cover}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1760px;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.card,.tile{background:var(--gg);border:1px solid var(--st);border-radius:24px;backdrop-filter:blur(calc(30px * var(--gob,1))) saturate(180%);-webkit-backdrop-filter:blur(calc(30px * var(--gob,1))) saturate(180%);box-shadow:var(--sh),inset 0 1px 0 var(--hi);transition:.25s}
+.card{padding:18px;margin-bottom:14px}
+.card h3,.lb{font-size:16px;font-weight:700;margin:0 0 12px}
+.lb{font-size:13px;color:var(--sub);font-weight:500;margin-bottom:6px}
+h2{font-size:20px;margin:0}
+.hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin:4px 0 14px}
+.sub,.s{font-size:12.5px;color:var(--sub)}
+.b{min-height:42px;padding:0 16px;border-radius:14px;background:var(--gg2);border:1px solid var(--st);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.2s;position:relative}
+.b.p{background:var(--tint);color:#fff;font-weight:700;border-color:transparent}
+.b.d{color:var(--bad)}
+.ib{width:38px;height:38px;min-height:38px;padding:0;border-radius:50%;flex:none}
+.ib::after,.ck::after{content:"";position:absolute;inset:-4px}
+.b:active,.tile:active,.cc:active{transform:scale(.96)}
+.hv:hover,.tile:hover{transform:translateY(-3px)}
+.in{width:100%;min-height:44px;border-radius:14px;background:var(--gg2);border:1px solid var(--st);padding:0 14px;font-size:16px;outline:0;transition:.2s}
+textarea.in{padding:12px 14px;line-height:1.8;resize:vertical}
+.in:focus{border-color:var(--tint);box-shadow:0 0 0 3px rgba(10,132,255,.25)}
+.f{display:block;margin-bottom:12px}.f>span{display:block;font-size:13px;color:var(--sub);margin-bottom:6px}
+.sr{position:relative}.sr svg{position:absolute;inset-inline-start:14px;top:12px;color:var(--sub)}.sr .in{padding-inline-start:44px}
+.acts{display:flex;align-items:center;gap:10px}.acts .in{flex:1}
+.grow{flex:1;min-width:0}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:color-mix(in srgb,var(--c) 18%,transparent);color:color-mix(in srgb,var(--c) 80%,var(--ink));white-space:nowrap}
+.seg{display:flex;background:var(--gg2);border-radius:14px;padding:3px;gap:2px;overflow-x:auto}
+.seg button{flex:1;border:0;background:none;min-height:44px;border-radius:11px;white-space:nowrap;padding:0 12px;cursor:pointer;color:var(--sub);display:flex;align-items:center;gap:6px;justify-content:center;transition:.2s}
+.seg .on{background:var(--gg);color:var(--ink);font-weight:800;box-shadow:inset 0 1px 0 var(--hi)}
+.tiles,.kp{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
+.kp .card{margin:0}
+@media(min-width:720px){.tiles,.kp{grid-template-columns:repeat(4,1fr)}}
+.tile{min-height:64px;border-radius:22px;padding:12px;display:flex;align-items:center;gap:10px;font-weight:700;cursor:pointer;text-align:start}
+.tile i{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 22%,transparent);color:var(--c);flex:none}
+.kv{font-size:26px;font-weight:800;margin:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:14px}
+.grid .card{margin:0}
+.cc{text-align:start;cursor:pointer;display:block;width:100%}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--st)}.row:last-child{border:0}
+.t{font-size:15px;font-weight:600}
+.av{width:46px;height:46px;border-radius:14px;flex:none;object-fit:cover;display:grid;place-items:center;font-weight:800;background:color-mix(in srgb,var(--c,#0a84ff) 22%,transparent);color:var(--c,#0a84ff)}
+.dg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.dg div{background:var(--gg2);border-radius:16px;padding:10px 12px;font-weight:700}.dg small{display:block;color:var(--sub);font-size:12.5px;font-weight:500}
+.pg{height:6px;border-radius:9px;background:var(--gg2);overflow:hidden}.pg i{display:block;height:100%;background:var(--ok);transition:.3s}
+.ck{width:28px;height:28px;border-radius:50%;border:2px solid var(--sub);background:none;flex:none;display:grid;place-items:center;cursor:pointer;color:#fff;padding:0;position:relative}.ck.on{background:var(--ok);border-color:var(--ok)}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--st);cursor:pointer;padding:0}
+.ch{position:relative;height:260px}
+@media(min-width:1000px){.wrap{padding-left:max(48px,env(safe-area-inset-left));padding-right:max(48px,env(safe-area-inset-right))}}
+.hg,.pg2{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}.hg .card,.pg2 .card{margin:0}.pg2>div{display:grid;gap:14px;align-content:start}
+@media(min-width:1000px){.hg{grid-template-columns:1fr 1fr 1fr}.pg2{grid-template-columns:1.35fr 1fr;align-items:start}}
+@media(min-width:720px){.dg.w{grid-template-columns:repeat(4,1fr)}}
+.pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(380px,100%),1fr));column-gap:32px}
+@media(max-width:480px){.pl{grid-template-columns:1fr}}
+#ov{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}#ov.on{display:flex}
+.sh{width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:18px 18px calc(18px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:color-mix(in srgb,var(--bg) 72%,transparent);border:1px solid var(--st);backdrop-filter:blur(calc(30px * var(--gob,1))) saturate(180%);-webkit-backdrop-filter:blur(calc(30px * var(--gob,1))) saturate(180%);box-shadow:var(--sh);animation:up .3s}
+@media(min-width:720px){#ov{align-items:center}.sh{border-radius:28px}}
+@keyframes up{from{transform:translateY(30px);opacity:0}}
+#toast{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translate(-50%,-200%);z-index:60;padding:6px 8px 6px 18px;border-radius:99px;display:flex;align-items:center;gap:12px;background:var(--gg);border:1px solid var(--st);backdrop-filter:blur(calc(30px * var(--gob,1)));-webkit-backdrop-filter:blur(calc(30px * var(--gob,1)));box-shadow:var(--sh);transition:.35s;font-weight:600}
+#toast.on{transform:translate(-50%,0)}#toast:not(:has(button)){padding:12px 18px}
+.sk{height:90px;border-radius:24px;margin-bottom:14px;background:linear-gradient(90deg,var(--gg2),var(--gg),var(--gg2));background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
 </head>
-
-<body class="flex h-screen text-gray-800 text-right">
-
-
-
-    <div id="sidebar-overlay" class="overlay" onclick="toggleSidebar()"></div>
-
-
-
-    <!-- القائمة الجانبية -->
-
-    <aside id="main-sidebar" class="w-64 bg-white border-l border-gray-200 flex flex-col p-4">
-
-        <div class="flex items-center justify-between mb-10 px-2">
-
-            <div class="flex items-center gap-2">
-
-                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
-
-                    <i class="fas fa-comment-dots"></i>
-
-                </div>
-
-                <span class="text-xl font-bold">ClientChat</span>
-
-            </div>
-
-            <button onclick="toggleSidebar()" class="lg:hidden text-gray-400"><i class="fas fa-times text-xl"></i></button>
-
-        </div>
-
-        
-
-        <nav class="flex-1 space-y-2 overflow-y-auto custom-scrollbar">
-
-            <a href="javascript:void(0)" onclick="showView('projects-list'); toggleSidebar();" class="flex items-center gap-3 p-3 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition">
-
-                <i class="fas fa-th-large w-5"></i> لوحة التحكم
-
-            </a>
-
-            
-
-            <div class="pt-6">
-
-                <div class="flex justify-between items-center px-3 mb-2">
-
-                    <p class="text-[10px] uppercase font-bold text-gray-400">مشاريعك</p>
-
-                    <button onclick="createNewProject()" class="text-indigo-600 hover:text-indigo-800 text-xs"><i class="fas fa-plus-circle"></i></button>
-
-                </div>
-
-                <div id="sidebar-projects-list" class="space-y-1"></div>
-
-            </div>
-
-        </nav>
-
-    </aside>
-
-
-
-    <main class="flex-1 overflow-y-auto relative h-full custom-scrollbar">
-
-        <!-- زر الموبايل العلوي -->
-
-        <div class="lg:hidden p-4 bg-white border-b flex items-center justify-between sticky top-0 z-30">
-
-            <button onclick="toggleSidebar()" class="text-indigo-600 p-2"><i class="fas fa-bars text-xl"></i></button>
-
-            <span class="font-bold">لوحة التحكم</span>
-
-            <div class="w-8"></div>
-
-        </div>
-
-
-
-        <div class="p-4 lg:p-8">
-
-            <section id="view-projects-list" class="project-view active space-y-6">
-
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-
-                    <h2 class="text-2xl font-bold">المشاريع</h2>
-
-                    <button onclick="createNewProject()" class="w-full sm:w-auto bg-indigo-600 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 font-medium shadow-lg shadow-indigo-100">
-
-                        <i class="fas fa-plus"></i> مشروع جديد
-
-                    </button>
-
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-grid"></div>
-
-            </section>
-
-
-
-            <section id="view-project-detail" class="project-view space-y-8">
-
-                <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-
-                    <div>
-
-                        <h1 class="text-2xl font-bold flex items-center gap-2">
-
-                            <span id="detail-title">--</span> 
-
-                            <i class="fas fa-pen text-sm text-gray-300 cursor-pointer hover:text-indigo-600" onclick="editProjectData()"></i>
-
-                        </h1>
-
-                        <p class="text-sm text-gray-400 mt-1">العميل: <span id="detail-client" class="text-gray-600 font-medium">--</span> <span class="mx-2">|</span> الموعد: <span id="detail-deadline" class="text-indigo-600">--</span></p>
-
-                    </div>
-
-                    <div class="flex items-center gap-4 w-full lg:w-auto">
-
-                        <div class="bg-white px-4 py-2 border rounded-xl shadow-sm text-left flex-1 lg:flex-none">
-
-                            <p class="text-[10px] text-gray-400">الميزانية</p>
-
-                            <p class="text-sm font-bold text-green-600" id="detail-cost">--</p>
-
-                        </div>
-
-                        <button onclick="showView('projects-list')" class="bg-gray-100 text-gray-600 px-6 py-2 rounded-xl font-medium hover:bg-gray-200 transition">خروج</button>
-
-                    </div>
-
-                </header>
-
-
-
-                <div class="grid grid-cols-12 gap-6">
-
-                    <!-- المحادثة -->
-
-                    <div class="col-span-12 lg:col-span-3 space-y-4 flex flex-col h-[500px] lg:h-[650px]">
-
-                        <div class="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm flex flex-col h-full">
-
-                            <div class="flex justify-between items-center mb-4">
-
-                                <h3 class="font-bold italic">1. Conversation</h3>
-
-                                <i class="fab fa-whatsapp text-green-500 text-xl"></i>
-
-                            </div>
-
-                            <div class="flex-1 space-y-4 overflow-y-auto mb-4 custom-scrollbar px-1" id="detail-chat"></div>
-
-                            <div class="space-y-2">
-
-                                <input type="text" id="chat-input" placeholder="اكتب ملاحظة..." class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm outline-none focus:ring-1 focus:ring-indigo-300">
-
-                                <button onclick="addMessage()" class="w-full bg-indigo-600 text-white py-3 rounded-2xl font-bold text-sm shadow-lg shadow-indigo-100 transition hover:bg-indigo-700">ارسال</button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="col-span-12 lg:col-span-6 space-y-6">
-
-                        <div class="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm">
-
-                            <h3 class="font-bold mb-4 text-gray-400 text-xs uppercase tracking-wider">2. Project Summary</h3>
-
-                            <div class="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
-
-                                <p class="text-sm text-gray-600 leading-relaxed font-medium" id="detail-desc">--</p>
-
-                            </div>
-
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-
-                                <div class="text-center p-2 border border-gray-50 rounded-xl bg-[#F8F9FE]"><p class="text-[9px] text-gray-400">Type</p><p class="text-[11px] font-bold text-indigo-600" id="detail-type">--</p></div>
-
-                                <div class="text-center p-2 border border-gray-50 rounded-xl bg-[#F8F9FE]"><p class="text-[9px] text-gray-400">Duration</p><p class="text-[11px] font-bold text-indigo-600" id="detail-duration">--</p></div>
-
-                                <div class="text-center p-2 border border-gray-50 rounded-xl bg-[#F8F9FE]"><p class="text-[9px] text-gray-400">Deadline</p><p class="text-[11px] font-bold text-indigo-600" id="detail-deadline-box">--</p></div>
-
-                                <div class="text-center p-2 border border-gray-50 rounded-xl bg-[#F8F9FE]"><p class="text-[9px] text-gray-400">Status</p><p id="detail-status-text" class="text-[11px] font-bold text-green-600">Active</p></div>
-
-                            </div>
-
-                            
-
-                            <div class="flex justify-between items-center mb-4 pt-4 border-t border-gray-50">
-
-                                <h4 class="text-sm font-bold">ملاحظات العميل</h4>
-
-                                <button onclick="addClientNote()" class="text-[10px] text-indigo-600 font-bold hover:underline">+ إضافة ملاحظة</button>
-
-                            </div>
-
-                            <div class="space-y-2" id="detail-notes-list"></div>
-
-                        </div>
-
-
-
-                        <div class="bg-white rounded-[32px] p-6 border border-gray-100 shadow-sm overflow-x-auto">
-
-                            <div class="flex justify-between items-center mb-6 min-w-[500px]">
-
-                                <h3 class="font-bold text-sm">Tasks</h3>
-
-                                <button onclick="addTask('todo')" class="text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1 rounded-lg font-bold">+ New Task</button>
-
-                            </div>
-
-                            <div class="grid grid-cols-3 gap-4 min-w-[500px]">
-
-                                <div class="space-y-3">
-
-                                    <div class="text-[10px] font-bold px-1 mb-2 text-gray-400 uppercase">To Do</div>
-
-                                    <div id="list-todo" class="min-h-[100px] space-y-3" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-
-                                </div>
-
-                                <div class="space-y-3">
-
-                                    <div class="text-[10px] font-bold px-1 mb-2 text-orange-400 uppercase">In Progress</div>
-
-                                    <div id="list-progress" class="min-h-[100px] space-y-3" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-
-                                </div>
-
-                                <div class="space-y-3">
-
-                                    <div class="text-[10px] font-bold px-1 mb-2 text-green-500 uppercase">Done</div>
-
-                                    <div id="list-done" class="min-h-[100px] space-y-3" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div class="col-span-12 lg:col-span-3 space-y-6">
-
-                        <div class="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-
-                            <div class="flex justify-between items-center mb-4">
-
-                                <h3 class="text-sm font-bold">Project Links</h3>
-
-                                <button onclick="addLink()" class="text-indigo-600"><i class="fas fa-plus-circle text-sm"></i></button>
-
-                            </div>
-
-                            <div class="space-y-3" id="detail-links-list"></div>
-
-                            <p id="no-links-msg" class="text-[10px] text-gray-400 italic text-center py-4">لا توجد روابط مضافة بعد</p>
-
-                        </div>
-
-
-
-                        <!-- قسم أرشفة المشروع المُعدل -->
-
-                        <div id="archive-section" class="bg-indigo-600 rounded-3xl p-6 text-white text-center shadow-lg shadow-indigo-100 transition-all duration-500">
-
-                            <i id="archive-icon" class="fas fa-rocket text-2xl mb-4 opacity-50 transition-all"></i>
-
-                            <p id="archive-title" class="text-xs font-bold mb-2">هل اكتمل المشروع؟</p>
-
-                            <button id="archive-btn" onclick="archiveProject()" class="bg-white text-indigo-600 text-[10px] font-bold py-2 px-6 rounded-xl w-full hover:bg-gray-100 transition shadow-sm">أرشفة المشروع</button>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-        </div>
-
-    </main>
-
-
-
-    <script>
-
-        function toggleSidebar() {
-
-            document.getElementById('main-sidebar').classList.toggle('open');
-
-            document.getElementById('sidebar-overlay').classList.toggle('active');
-
-        }
-
-
-
-        let projects = JSON.parse(localStorage.getItem('cc_pro_v3')) || [];
-
-        let currentId = null;
-
-
-
-        function save() { 
-
-            localStorage.setItem('cc_pro_v3', JSON.stringify(projects)); 
-
-            renderProjects(); 
-
-        }
-
-
-
-        function showView(v) {
-
-            document.querySelectorAll('.project-view').forEach(el => el.classList.remove('active'));
-
-            document.getElementById('view-' + v).classList.add('active');
-
-        }
-
-
-
-        function createNewProject() {
-
-            const title = prompt("اسم المشروع الجديد:");
-
-            if(!title) return;
-
-            const p = {
-
-                id: Date.now(), title, client: 'عميل جديد', desc: 'اكتب نبذة عن المشروع هنا...',
-
-                type: 'Motion Graphics', cost: '$0', deadline: '2026-05-20', duration: '45s',
-
-                isArchived: false,
-
-                notes: [], chat: [], links: [], tasks: { todo: [], progress: [], done: [] }
-
-            };
-
-            projects.push(p); save(); openProject(p.id);
-
-        }
-
-
-
-        function renderProjects() {
-
-            const grid = document.getElementById('projects-grid');
-
-            const side = document.getElementById('sidebar-projects-list');
-
-            grid.innerHTML = side.innerHTML = '';
-
-            projects.forEach(p => {
-
-                grid.innerHTML += `
-
-                    <div onclick="openProject(${p.id})" class="bg-white p-6 rounded-[32px] border ${p.isArchived ? 'border-green-200' : 'border-gray-100'} shadow-sm hover:border-indigo-200 transition cursor-pointer relative overflow-hidden">
-
-                        ${p.isArchived ? '<div class="absolute top-0 left-0 bg-green-500 text-white text-[8px] px-3 py-1 rounded-br-xl font-bold uppercase">Archived</div>' : ''}
-
-                        <div class="w-10 h-10 ${p.isArchived ? 'bg-green-50 text-green-600' : 'bg-indigo-50 text-indigo-600'} rounded-xl mb-4 flex items-center justify-center font-bold">${p.title[0]}</div>
-
-                        <h4 class="font-bold text-gray-800 mb-1">${p.title}</h4>
-
-                        <p class="text-[10px] text-gray-400 mb-4">${p.client}</p>
-
-                        <div class="flex justify-between items-center text-[10px] font-bold ${p.isArchived ? 'text-green-600' : 'text-indigo-600'} pt-3 border-t">
-
-                            <span>${p.cost}</span> <span>${p.deadline}</span>
-
-                        </div>
-
-                    </div>`;
-
-                side.innerHTML += `
-
-                    <button onclick="openProject(${p.id}); if(window.innerWidth < 1024) toggleSidebar();" class="w-full text-right p-3 text-xs text-gray-500 hover:bg-indigo-50 rounded-xl flex items-center gap-2 transition">
-
-                        <div class="w-2 h-2 ${p.isArchived ? 'bg-green-400' : 'bg-indigo-400'} rounded-full"></div> ${p.title}
-
-                    </button>`;
-
-            });
-
-        }
-
-
-
-        function openProject(id) {
-
-            currentId = id;
-
-            const p = projects.find(x => x.id === id);
-
-            document.getElementById('detail-title').innerText = p.title;
-
-            document.getElementById('detail-client').innerText = p.client;
-
-            document.getElementById('detail-cost').innerText = p.cost;
-
-            document.getElementById('detail-type').innerText = p.type;
-
-            document.getElementById('detail-deadline').innerText = p.deadline;
-
-            document.getElementById('detail-deadline-box').innerText = p.deadline;
-
-            document.getElementById('detail-duration').innerText = p.duration;
-
-            document.getElementById('detail-desc').innerText = p.desc;
-
-            
-
-            resetArchiveUI(p.isArchived);
-
-            renderNotes(p); renderTasks(p); renderChat(p); renderLinks(p);
-
-            showView('project-detail');
-
-        }
-
-
-
-        // دالة الأرشفة الجديدة مع تغيير الألوان
-
-        function archiveProject() {
-
-            const p = projects.find(x => x.id === currentId);
-
-            p.isArchived = true;
-
-            
-
-            const section = document.getElementById('archive-section');
-
-            const btn = document.getElementById('archive-btn');
-
-            const icon = document.getElementById('archive-icon');
-
-            const title = document.getElementById('archive-title');
-
-            const statusText = document.getElementById('detail-status-text');
-
-
-
-            section.classList.replace('bg-indigo-600', 'bg-green-500');
-
-            btn.innerText = 'تم الإنتهاء';
-
-            btn.classList.replace('text-indigo-600', 'text-green-600');
-
-            icon.classList.replace('fa-rocket', 'fa-check-circle');
-
-            icon.classList.replace('opacity-50', 'opacity-100');
-
-            title.innerText = 'المشروع مكتمل!';
-
-            statusText.innerText = 'Completed';
-
-            statusText.className = 'text-[11px] font-bold text-green-600';
-
-
-
-            save();
-
-        }
-
-
-
-        function resetArchiveUI(isArchived) {
-
-            const section = document.getElementById('archive-section');
-
-            const btn = document.getElementById('archive-btn');
-
-            const icon = document.getElementById('archive-icon');
-
-            const title = document.getElementById('archive-title');
-
-            const statusText = document.getElementById('detail-status-text');
-
-
-
-            if (isArchived) {
-
-                section.className = 'bg-green-500 rounded-3xl p-6 text-white text-center shadow-lg shadow-green-100 transition-all duration-500';
-
-                btn.innerText = 'تم الإنتهاء';
-
-                btn.className = 'bg-white text-green-600 text-[10px] font-bold py-2 px-6 rounded-xl w-full shadow-sm';
-
-                icon.className = 'fas fa-check-circle text-2xl mb-4 opacity-100 transition-all';
-
-                title.innerText = 'المشروع مكتمل!';
-
-                statusText.innerText = 'Completed';
-
-            } else {
-
-                section.className = 'bg-indigo-600 rounded-3xl p-6 text-white text-center shadow-lg shadow-indigo-100 transition-all duration-500';
-
-                btn.innerText = 'أرشفة المشروع';
-
-                btn.className = 'bg-white text-indigo-600 text-[10px] font-bold py-2 px-6 rounded-xl w-full hover:bg-gray-100 transition shadow-sm';
-
-                icon.className = 'fas fa-rocket text-2xl mb-4 opacity-50 transition-all';
-
-                title.innerText = 'هل اكتمل المشروع؟';
-
-                statusText.innerText = 'Active';
-
-            }
-
-        }
-
-
-
-        function editProjectData() {
-
-            const p = projects.find(x => x.id === currentId);
-
-            p.title = prompt("اسم المشروع:", p.title) || p.title;
-
-            p.client = prompt("اسم العميل:", p.client) || p.client;
-
-            p.cost = prompt("التكلفة:", p.cost) || p.cost;
-
-            p.deadline = prompt("تاريخ التسليم:", p.deadline) || p.deadline;
-
-            p.desc = prompt("وصف المشروع:", p.desc) || p.desc;
-
-            p.type = prompt("نوع المشروع:", p.type) || p.type;
-
-            p.duration = prompt("المدة:", p.duration) || p.duration;
-
-            save(); openProject(currentId);
-
-        }
-
-
-
-        function addClientNote() {
-
-            const n = prompt("اكتب ملاحظة العميل:");
-
-            if(n) { projects.find(x => x.id === currentId).notes.push(n); save(); openProject(currentId); }
-
-        }
-
-        function renderNotes(p) {
-
-            document.getElementById('detail-notes-list').innerHTML = p.notes.map((n, i) => `
-
-                <div class="bg-orange-50 p-3 rounded-2xl text-[11px] text-orange-700 flex justify-between items-center group">
-
-                    <span><i class="fas fa-info-circle ml-2"></i> ${n}</span>
-
-                    <i class="fas fa-times cursor-pointer opacity-50 hover:opacity-100" onclick="deleteNote(${i})"></i>
-
-                </div>`).join('');
-
-        }
-
-        function deleteNote(i) { projects.find(x => x.id === currentId).notes.splice(i, 1); save(); openProject(currentId); }
-
-
-
-        function addLink() {
-
-            const name = prompt("اسم الرابط (مثال: Google Drive):");
-
-            const url = prompt("الصق الرابط هنا:");
-
-            if(name && url) { 
-
-                projects.find(x => x.id === currentId).links.push({name, url}); 
-
-                save(); openProject(currentId); 
-
-            }
-
-        }
-
-        function renderLinks(p) {
-
-            const list = document.getElementById('detail-links-list');
-
-            const msg = document.getElementById('no-links-msg');
-
-            if(p.links.length > 0) {
-
-                msg.style.display = 'none';
-
-                list.innerHTML = p.links.map((l, i) => `
-
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-2xl group">
-
-                        <a href="${l.url}" target="_blank" class="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-2">
-
-                            <i class="fas fa-link text-[10px]"></i> ${l.name}
-
-                        </a>
-
-                        <i class="fas fa-trash text-[10px] text-red-300 cursor-pointer" onclick="deleteLink(${i})"></i>
-
-                    </div>`).join('');
-
-            } else {
-
-                msg.style.display = 'block';
-
-                list.innerHTML = '';
-
-            }
-
-        }
-
-        function deleteLink(i) { projects.find(x => x.id === currentId).links.splice(i, 1); save(); openProject(currentId); }
-
-
-
-        function allowDrop(ev) { ev.preventDefault(); }
-
-        function drag(ev) { ev.dataTransfer.setData("tid", ev.target.id); ev.target.classList.add('dragging'); }
-
-        function drop(ev) {
-
-            ev.preventDefault();
-
-            const tid = ev.dataTransfer.getData("tid");
-
-            const targetCol = ev.currentTarget.id.replace('list-', '');
-
-            const p = projects.find(x => x.id === currentId);
-
-            let obj = null;
-
-            ['todo', 'progress', 'done'].forEach(s => {
-
-                const idx = p.tasks[s].findIndex(t => t.id == tid);
-
-                if(idx > -1) obj = p.tasks[s].splice(idx, 1)[0];
-
-            });
-
-            if(obj) { p.tasks[targetCol].push(obj); save(); openProject(currentId); }
-
-        }
-
-
-
-        function addTask(col) {
-
-            const n = prompt("اسم المهمة:");
-
-            if(n) { projects.find(x => x.id === currentId).tasks[col].push({id: Date.now(), name: n}); save(); openProject(currentId); }
-
-        }
-
-
-
-        function renderTasks(p) {
-
-            ['todo', 'progress', 'done'].forEach(s => {
-
-                document.getElementById('list-'+s).innerHTML = p.tasks[s].map(t => `
-
-                    <div id="${t.id}" draggable="true" ondragstart="drag(event)" class="task-card bg-white border border-gray-100 p-4 rounded-2xl text-xs font-bold shadow-sm ${s === 'done' ? 'opacity-50 line-through' : ''}">
-
-                        ${t.name}
-
-                        <div class="flex justify-end mt-3 pt-3 border-t border-gray-50">
-
-                             <div class="w-1.5 h-1.5 rounded-full ${s === 'todo' ? 'bg-purple-400' : s === 'progress' ? 'bg-orange-400' : 'bg-green-500'}"></div>
-
-                        </div>
-
-                    </div>`).join('');
-
-            });
-
-        }
-
-
-
-        function addMessage() {
-
-            const inp = document.getElementById('chat-input');
-
-            if(inp.value) {
-
-                projects.find(x => x.id === currentId).chat.push({t: inp.value, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})});
-
-                inp.value = ''; save(); renderChat(projects.find(x => x.id === currentId));
-
-            }
-
-        }
-
-
-
-        function renderChat(p) {
-
-            const box = document.getElementById('detail-chat');
-
-            box.innerHTML = p.chat.map(m => `
-
-                <div class="chat-bubble bg-indigo-50 p-4 rounded-2xl rounded-tr-none self-start ml-auto shadow-sm">
-
-                    <p class="text-gray-700">${m.t}</p>
-
-                    <span class="block text-[9px] text-indigo-300 mt-2 font-bold">${m.time}</span>
-
-                </div>`).join('');
-
-            box.scrollTop = box.scrollHeight;
-
-        }
-
-
-
-        renderProjects();
-
-    </script>
-
+<body>
+<div id="bgi"></div>
+<div id="toast" role="status"></div>
+<div class="wrap">
+ <div class="acts" style="margin-bottom:12px"><div class="sr grow"><span id="si"></span><input class="in" id="q" placeholder="ابحث في العملاء والمشاريع والسكريبت والروابط" oninput="q=this.value;render()"></div><button class="b ib" onclick="openS()" aria-label="الإعدادات والمظهر" id="gb"></button></div>
+ <nav class="seg nv" style="margin:12px 0 18px"></nav>
+ <main id="main"><div class="sk"></div><div class="sk"></div><div class="sk"></div></main>
+</div>
+<div id="ov" onclick="if(event.target.id=='ov')pop()"></div>
+<script>
+const $=s=>document.querySelector(s),L=localStorage;
+const P={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',film:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/>',check:'<path d="m5 12 5 5 9-10"/>',globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>',play:'<rect x="3" y="5" width="18" height="14" rx="4"/><path d="m10 9 5 3-5 3Z"/>',folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>',archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A15 15 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',mail:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m3 8 9 6 9-6"/>',x:'<path d="M6 6l12 12M18 6 6 18"/>',back:'<path d="m9 6 6 6-6 6"/>',home:'<path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/>',image:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'};
+const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TYPES=['موشن جرافيك','مونتاج فيديو','لوجو أنيميشن','إنفوجرافيك','إعلان','فيديو شرح','تصميم ثابت','أخرى'],CATS=['شركة','وكالة','مؤسسة','ستارت أب','فرد'],CLS=[['VIP','--warn'],['منتظم','--ok'],['جديد','--tint'],['محتمل','--sub']],COL=['#0a84ff','#30d158','#bf5af2','#ff9f0a','#ff453a','#64d2ff'];
+let D=JSON.parse(L['dash.data']||'null')||{clients:[],projects:[]},view='home',q='',stack=[],charts=[],pt='script',cur,back='projects',FS,lastN=0;const U={};
+const save=()=>{try{L['dash.data']=JSON.stringify(D)}catch{toast('المساحة ممتلئة، احذف بعض الصور')}};
+const uid=()=>Math.random().toString(36).slice(2,9),cl=id=>D.clients.find(c=>c.id==id),pr=id=>D.projects.find(p=>p.id==id);
+const money=n=>(+n||0).toLocaleString('ar-EG')+' ج.م',dleft=d=>d?Math.round((new Date(d+'T00:00')-new Date().setHours(0,0,0,0))/864e5):null;
+const empty=m=>`<div class="sub" style="padding:20px;text-align:center">${m}</div>`,hd=(t,b)=>`<div class="hd"><h2>${t}</h2>${b}</div>`;
+/* IndexedDB للملفات */
+const db=new Promise(r=>{const o=indexedDB.open('dash',1);o.onupgradeneeded=()=>o.result.createObjectStore('f');o.onsuccess=()=>r(o.result)});
+const tx=async(m,f)=>{const d=await db;return new Promise(r=>{const rq=f(d.transaction('f',m).objectStore('f'));rq.onsuccess=()=>r(rq.result)})};
+const putF=(k,b)=>tx('readwrite',s=>s.put(b,k)),getF=k=>tx('readonly',s=>s.get(k)),delF=k=>tx('readwrite',s=>s.delete(k));
+/* واجهة */
+let tt;function toast(m,undo){const t=$('#toast');t.innerHTML=`<span>${m}</span>`+(undo?`<button class="b" id="un">تراجع</button>`:'');t.classList.add('on');clearTimeout(tt);if(undo)$('#un').onclick=()=>{undo();t.classList.remove('on')};tt=setTimeout(()=>t.classList.remove('on'),6000)}
+function del(msg,fn){const snap=JSON.stringify(D);fn();save();render();toast(msg,()=>{D=JSON.parse(snap);save();render()})}
+function rs(file,max,cb){const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);cb(c.toDataURL(max>500?'image/jpeg':'image/png',.85))};i.src=r.result};r.readAsDataURL(file)}
+const KS=[[/youtu/,'play','يوتيوب','#ff453a'],[/vimeo|frame\.io/,'play','فيميو','#64d2ff'],[/drive\.google|docs\.google/,'folder','جوجل درايف','#0a84ff'],[/dropbox|wetransfer|onedrive|mega\.nz/,'folder','تخزين سحابي','#0a84ff'],[/behance|dribbble|figma|canva/,'image','تصميم','#bf5af2']];
+function lk(u){u=/^https?:/.test(u)?u:'https://'+u;let h='';try{h=new URL(u).hostname.replace('www.','')}catch{}const m=KS.find(x=>x[0].test(h));return m?{u,h,i:m[1],t:m[2],c:m[3]}:{u,h,i:'globe',t:'موقع ويب',c:'#30d158'}}
+const av=c=>c.logo?`<img class="av" src="${c.logo}" alt="">`:`<span class="av" style="--c:${COL[(c.name||'?').length%6]}">${E([...c.name][0])}</span>`;
+const clsPill=c=>c?`<span class="pill" style="--c:var(${(CLS.find(x=>x[0]==c)||[0,'--sub'])[1]})">${E(c)}</span>`:'';
+const dl=d=>d==null?'':`<span class="pill" style="--c:var(${d<0?'--bad':d<=3?'--warn':'--ok'})">${d<0?'متأخر '+-d+' يوم':d==0?'اليوم':d+' يوم'}</span>`;
+const prow=p=>{const c=cl(p.client),T=p.tasks||[],dn=T.filter(t=>t.done).length;return `<div class="row" style="cursor:pointer" onclick="op('${p.id}')">${c?av(c):''}<div class="grow"><div class="t">${E(p.title)}</div><div class="s">${E(c?c.name:'')}${p.type?' · '+E(p.type):''}</div>${T.length?`<div class="pg" style="margin-top:6px"><i style="width:${dn/T.length*100}%"></i></div>`:''}</div>${p.status=='done'?`<span class="pill" style="--c:var(--ok)">محفوظ</span>`:dl(dleft(p.deadline))}</div>`};
+const secP=(l,t)=>`<div class="card">${t?`<h3>${t}</h3>`:''}<div class="pl">${l.length?l.map(prow).join(''):empty('لا توجد مشاريع')}</div></div>`;
+const secC=l=>l.length?`<div class="grid">${l.map(c=>`<button class="card hv cc" onclick="oc('${c.id}')"><div class="acts">${av(c)}<div class="grow"><div class="t">${E(c.name)}</div><div class="s">${D.projects.filter(p=>p.client==c.id).length} مشروع</div></div></div><div class="acts" style="margin-top:10px">${c.cat?`<span class="pill" style="--c:var(--sub)">${E(c.cat)}</span>`:''}${clsPill(c.cls)}</div></button>`).join('')}</div>`:empty('لا يوجد عملاء. اضغط «عميل جديد» للبدء');
+function home(){
+ const A=D.projects.filter(p=>p.status!='done'),T=A.flatMap(p=>p.tasks||[]).filter(t=>!t.done).length,n=new Date(),M=t=>{const d=new Date(t||0);return d.getFullYear()*12+d.getMonth()-(n.getFullYear()*12+n.getMonth())};
+ const mm=(a,v=()=>1)=>[0,-1].map(k=>a.filter(x=>M(x.created)==k).reduce((s,x)=>s+(+v(x)||0),0));
+ const kpi=(l,v,x)=>{let h=x;if(Array.isArray(x)){const[c,p]=x;h=c||p?`<b style="color:var(${c>=p?'--ok':'--bad'})">${c>=p?'▲':'▼'} ${p?Math.round(Math.abs(c-p)/p*100)+'٪':'جديد'}</b> عن الشهر الماضي`:'—'}return `<div class="card"><div class="sub">${l}</div><div class="kv">${v}</div><div class="sub">${h}</div></div>`};
+ const up=A.filter(p=>p.deadline).sort((a,b)=>a.deadline>b.deadline?1:-1).slice(0,5);
+ $('#main').innerHTML=`<div class="tiles">${[['user','عميل جديد','#30d158','editClient()'],['film','مشروع جديد','#0a84ff','newProj()'],['archive','المحفوظات','#bf5af2',"go('archive')"],['gear','الإعدادات','#ff9f0a','openS()']].map(t=>`<button class="tile" style="--c:${t[2]}" onclick="${t[3]}"><i>${ic(t[0])}</i>${t[1]}</button>`).join('')}</div>
+ <div class="kp" style="margin-bottom:14px">${kpi('مشاريع نشطة',A.length,`${mm(D.projects)[0]} جديد هذا الشهر`)}${kpi('العملاء',D.clients.length,mm(D.clients))}${kpi('مهام مفتوحة',T,'في المشاريع النشطة')}${kpi('تكلفة هذا الشهر',money(mm(D.projects,p=>p.cost)[0]),mm(D.projects,p=>p.cost))}</div>
+ <div class="hg">${secP(up,'أقرب مواعيد التسليم')}<div class="card"><h3>التكلفة حسب العميل</h3><div class="ch"><canvas id="c1"></canvas></div></div><div class="card"><h3>أنواع المشاريع</h3><div class="ch"><canvas id="c2"></canvas></div></div></div>`;
+ if(!window.Chart||!D.projects.length)return;
+ const cs=getComputedStyle(document.documentElement);Chart.defaults.color=cs.getPropertyValue('--sub').trim();Chart.defaults.font.family='Tajawal,system-ui';Chart.defaults.animation=false;
+ const byC=D.clients.map(c=>[c.name,D.projects.filter(p=>p.client==c.id).reduce((s,p)=>s+(+p.cost||0),0)]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]).slice(0,6),byT={};
+ D.projects.forEach(p=>{const k=p.type||'أخرى';byT[k]=(byT[k]||0)+1});
+ if(byC.length)charts.push(new Chart($('#c1'),{type:'bar',data:{labels:byC.map(x=>x[0]),datasets:[{data:byC.map(x=>x[1]),backgroundColor:COL,borderRadius:7}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(128,128,128,.18)'}},x:{grid:{display:false}}}}}));
+ charts.push(new Chart($('#c2'),{type:'doughnut',data:{labels:Object.keys(byT),datasets:[{data:Object.values(byT),backgroundColor:COL,borderWidth:0}]},options:{maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom'}}}}));
+}
+const V={home,proj:()=>$('#main').innerHTML=projPage(pr(cur)),clients:()=>$('#main').innerHTML=hd('العملاء',`<button class="b p" onclick="editClient()">${ic('plus')} عميل جديد</button>`)+secC(D.clients),projects:()=>$('#main').innerHTML=hd('المشاريع',`<button class="b p" onclick="newProj()">${ic('plus')} مشروع جديد</button>`)+secP(D.projects.filter(p=>p.status!='done').reverse()),archive:()=>$('#main').innerHTML=hd('المشاريع المحفوظة','')+secP(D.projects.filter(p=>p.status=='done').reverse())};
+function draw(){charts.forEach(c=>c.destroy());charts=[];document.querySelectorAll('.nv button').forEach(b=>b.classList.toggle('on',b.dataset.v==view&&!q.trim()));const s=q.trim().toLowerCase();
+ if(s){const h=x=>JSON.stringify({...x,logo:0}).toLowerCase();$('#main').innerHTML=hd('نتائج البحث','')+`<div class="lb">العملاء</div>`+secC(D.clients.filter(c=>h(c).includes(s)))+`<div style="height:14px"></div>`+secP(D.projects.filter(p=>(h(p)+(cl(p.client)?.name||'').toLowerCase()).includes(s)),'المشاريع');return}V[view]()}
+function render(){const y=scrollY;draw();if(view=='proj')scrollTo(0,y);const o=$('#ov'),st=o.firstChild?o.firstChild.scrollTop:0;if(!stack.length){o.className='';o.innerHTML='';lastN=0;return}o.className='on';o.innerHTML=`<div class="sh" role="dialog">${stack[stack.length-1]()}</div>`;o.firstChild.scrollTop=lastN==stack.length?st:0;lastN=stack.length;
+ document.querySelectorAll('[data-f]').forEach(async e=>{const id=e.dataset.f;if(!U[id]){const b=await getF(id);if(!b)return;U[id]=URL.createObjectURL(b)}e.src=U[id]})}
+const go=v=>{view=v;q='';$('#q').value='';stack=[];render()},pop=()=>{stack.pop();render()},xb=`<button class="b ib" onclick="pop()" aria-label="إغلاق">${ic('x')}</button>`;
+const oc=id=>{stack.push(cSheet(id));render()},op=id=>{if(view!='proj')back=view;cur=id;view='proj';stack=[];q='';$('#q').value='';scrollTo(0,0);render()};
+/* نماذج */
+function fld(f,v=''){let h;
+ if(f.t=='sel')h=`<select class="in" id="f_${f.k}">${[['','—'],...f.o.map(x=>Array.isArray(x)?x:[x,x])].map(o=>`<option value="${E(o[0])}"${o[0]==v?' selected':''}>${E(o[1])}</option>`).join('')}</select>`;
+ else if(f.t=='img')h=`<div class="acts">${v?`<img class="av" src="${v}" alt="">`:''}<input type="file" accept="image/*" class="in" onchange="logoPick(this)"></div>`;
+ else h=`<input class="in" id="f_${f.k}" type="${f.t||'text'}" dir="auto" value="${E(v)}">`;
+ return `<label class="f"><span>${f.l}${f.r?' *':''}</span>${h}</label>`}
+function form(title,fields,val,fn){FS={fields,val,save:fn};stack.push(()=>`<div class="hd"><h3 style="margin:0">${title}</h3>${xb}</div>${FS.fields.map(f=>fld(f,FS.val[f.k])).join('')}<button class="b p" style="width:100%" onclick="sub()">حفظ</button>`);render()}
+const collect=()=>FS.fields.forEach(f=>{const e=$('#f_'+f.k);if(e)FS.val[f.k]=e.value});
+function logoPick(i){if(!i.files[0])return;collect();rs(i.files[0],256,d=>{FS.val.logo=d;render()})}
+function sub(){collect();const f=FS.fields.find(f=>f.r&&!FS.val[f.k]);if(f)return toast('املأ حقل: '+f.l);FS.save(FS.val);stack.pop();save();render()}
+const CF=[{k:'name',l:'اسم العميل أو الشركة',r:1},{k:'logo',l:'اللوجو',t:'img'},{k:'phone',l:'رقم التليفون',t:'tel'},{k:'email',l:'الإيميل',t:'email'},{k:'site',l:'موقع الشركة',t:'url'},{k:'cat',l:'فئة العميل',t:'sel',o:CATS},{k:'cls',l:'التصنيف',t:'sel',o:CLS.map(x=>x[0])}];
+function editClient(id){const v=id?{...cl(id)}:{};form(id?'تعديل العميل':'عميل جديد',CF,v,v=>{if(id)Object.assign(cl(id),v);else D.clients.push({id:uid(),created:Date.now(),...v})})}
+function newProj(cid){if(!D.clients.length)return toast('أضف عميلاً أولاً');editProj(0,cid)}
+function editProj(id,cid){const F=[{k:'title',l:'عنوان المشروع',r:1},{k:'client',l:'العميل',t:'sel',o:D.clients.map(c=>[c.id,c.name]),r:1},{k:'type',l:'نوع الفيديو أو التصميم',t:'sel',o:TYPES},{k:'dur',l:'المدة (مثلاً 60 ثانية)'},{k:'deadline',l:'معاد التسليم',t:'date'},{k:'cost',l:'تكلفة المشروع (ج.م)',t:'number'}],v=id?{...pr(id)}:{client:cid||''};
+ form(id?'تعديل المشروع':'مشروع جديد',F,v,v=>{if(id)Object.assign(pr(id),v);else D.projects.push({id:uid(),created:Date.now(),status:'active',tasks:[],links:[],files:[],script:'',notes:'',...v})})}
+/* شيت العميل */
+const cSheet=id=>()=>{const c=cl(id),P=D.projects.filter(p=>p.client==id),ct=(i,t,h)=>t?`<div class="row">${ic(i)}<a class="grow" href="${E(h)}" target="_blank" rel="noopener" dir="ltr" style="color:var(--ink);text-decoration:none;text-align:right">${E(t)}</a></div>`:'';
+ return `<div class="hd"><div class="acts">${av(c)}<div><h3 style="margin:0">${E(c.name)}</h3><div class="acts" style="margin-top:4px">${c.cat?`<span class="pill" style="--c:var(--sub)">${E(c.cat)}</span>`:''}${clsPill(c.cls)}</div></div></div>${xb}</div>
+ ${ct('phone',c.phone,'tel:'+c.phone)}${ct('mail',c.email,'mailto:'+c.email)}${ct('globe',c.site,lk(c.site||'').u)}
+ <div class="dg" style="margin:14px 0"><div><small>عدد المشاريع</small>${P.length}</div><div><small>إجمالي التكلفة</small>${money(P.reduce((s,p)=>s+(+p.cost||0),0))}</div></div>
+ <div class="acts" style="flex-wrap:wrap"><button class="b p" onclick="newProj('${id}')">${ic('plus')} مشروع جديد</button><button class="b" onclick="editClient('${id}')">${ic('edit')} تعديل</button><button class="b d" onclick="del('تم حذف العميل ومشاريعه',()=>{D.clients=D.clients.filter(c=>c.id!='${id}');D.projects=D.projects.filter(p=>p.client!='${id}');stack=[]})">${ic('trash')} حذف</button></div>
+ <h3 style="margin:18px 0 4px">المشاريع</h3>${P.length?P.map(prow).join(''):empty('لا توجد مشاريع لهذا العميل')}`};
+/* صفحة المشروع */
+const projPage=p=>{const c=cl(p.client),done=p.status=='done',i=p.id,sec=(t,k)=>`<div class="card"><h3>${t}</h3>${panel(p,k)}</div>`;
+ return `<div class="hd"><div class="acts"><button class="b ib" onclick="go(back)" aria-label="رجوع">${ic('back')}</button><div><h2>${E(p.title)}</h2><div class="s">${c?`<a href="#" onclick="oc('${c.id}');return false" style="color:inherit">${E(c.name)}</a>`:''} ${done?'<span class="pill" style="--c:var(--ok)">محفوظ</span>':''}</div></div></div>
+ <div class="acts" style="flex-wrap:wrap"><button class="b p" onclick="fin('${i}')">${ic('check')} ${done?'إعادة فتح المشروع':'اكتمل المشروع'}</button><button class="b" onclick="editProj('${i}')">${ic('edit')} تعديل</button><button class="b d" onclick="del('تم حذف المشروع',()=>{D.projects=D.projects.filter(p=>p.id!='${i}');view=back})">${ic('trash')} حذف</button></div></div>
+ <div class="card"><div class="dg w">${[['النوع',E(p.type||'—')],['المدة',E(p.dur||'—')],['التسليم',E(p.deadline||'—')+' '+(done?'':dl(dleft(p.deadline)))],['التكلفة',money(p.cost)]].map(x=>`<div><small>${x[0]}</small>${x[1]}</div>`).join('')}</div></div>
+ <div class="pg2"><div>${sec('السكريبت','script')}${sec('ملاحظات العميل','notes')}</div><div>${sec('المهام','tasks')}${sec('الروابط','links')}${sec('الملفات','files')}</div></div>`};
+function panel(p,pt){const i=p.id,rm=(f,a)=>`<button class="b ib d" onclick="${f}('${i}','${a}')" aria-label="حذف">${ic('trash')}</button>`;
+ if(pt=='script'||pt=='notes'){const k=pt;return `<textarea class="in" rows="${k=='script'?18:7}" placeholder="${k=='script'?'اكتب السكريبت أو السيناريو هنا':'اكتب ملاحظات العميل هنا'}" oninput="pr('${i}').${k}=this.value;save()">${E(p[k])}</textarea>`}
+ if(pt=='tasks'){const T=p.tasks,dn=T.filter(t=>t.done).length;return `<div class="acts" style="margin-bottom:12px"><input id="nt" class="in" placeholder="مشهد أو مهمة جديدة" onkeydown="if(event.key=='Enter')addT('${i}')"><button class="b p" onclick="addT('${i}')" aria-label="إضافة">${ic('plus')}</button></div>${T.length?`<div class="pg"><i style="width:${dn/T.length*100}%"></i></div><div class="s" style="margin-top:6px">${dn} من ${T.length} مكتملة</div>`:empty('قسّم المشروع لمشاهد ومهام صغيرة')}${T.map(t=>`<div class="row"><button class="ck${t.done?' on':''}" onclick="tg('${i}','${t.id}')" aria-label="تم">${t.done?ic('check',16):''}</button><div class="grow" style="${t.done?'text-decoration:line-through;color:var(--sub)':''}">${E(t.t)}</div>${rm('rmT',t.id)}</div>`).join('')}`}
+ if(pt=='links')return `<button class="b p" onclick="addL('${i}')">${ic('plus')} رابط جديد</button>${p.links.length?'':empty('أضف روابط الدرايف واليوتيوب والموقع للوصول السريع')}${p.links.map(l=>{const k=lk(l.u);return `<div class="row"><a class="acts grow" href="${E(k.u)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;min-width:0"><span class="av" style="--c:${k.c}">${ic(k.i)}</span><div class="grow"><div class="t">${E(l.t||k.t)}</div><div class="s" dir="ltr" style="text-align:right">${k.t} · ${E(k.h)}</div></div></a>${rm('rmL',l.id)}</div>`}).join('')}`;
+ return `<label class="b p">${ic('upload')} رفع ملفات<input type="file" multiple accept="image/*,video/*,audio/*" hidden onchange="upF('${i}',this)"></label>${p.files.length?'':empty('ارفع صور وفيديو وصوت من جهازك')}<div class="grid" style="margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">${p.files.map(f=>`<div class="card" style="padding:10px">${f.type.startsWith('image')?`<img data-f="${f.id}" alt="" style="width:100%;border-radius:14px;max-height:160px;object-fit:cover">`:f.type.startsWith('video')?`<video data-f="${f.id}" controls style="width:100%;border-radius:14px"></video>`:`<audio data-f="${f.id}" controls style="width:100%"></audio>`}<div class="acts" style="margin-top:8px"><div class="s grow" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${E(f.name)}</div>${rm('rmF',f.id)}</div></div>`).join('')}</div>`}
+function addT(id){const v=$('#nt').value.trim();if(!v)return;pr(id).tasks.push({id:uid(),t:v,done:0});save();render();setTimeout(()=>$('#nt')?.focus())}
+const tg=(p,t)=>{const x=pr(p).tasks.find(x=>x.id==t);x.done=!x.done;save();render()},rmT=(p,t)=>del('تم حذف المهمة',()=>pr(p).tasks=pr(p).tasks.filter(x=>x.id!=t)),rmL=(p,t)=>del('تم حذف الرابط',()=>pr(p).links=pr(p).links.filter(x=>x.id!=t));
+const rmF=(p,f)=>{del('تم حذف الملف',()=>pr(p).files=pr(p).files.filter(x=>x.id!=f));setTimeout(()=>{if(!JSON.stringify(D).includes(f))delF(f)},6500)};
+const addL=id=>form('رابط جديد',[{k:'t',l:'اسم الرابط (اختياري)'},{k:'u',l:'الرابط',t:'url',r:1}],{},v=>pr(id).links.push({id:uid(),...v}));
+async function upF(id,i){const p=pr(id);for(const f of i.files){const k=uid();await putF(k,f);p.files.push({id:k,name:f.name,type:f.type||'audio/x',size:f.size})}save();render()}
+function fin(id){const p=pr(id),d=p.status=='done';p.status=d?'active':'done';p.doneAt=Date.now();save();if(!d){view=back;stack=[];render();toast('اكتمل المشروع وتم حفظه في المحفوظات')}else render()}
+/* الإعدادات */
+const g=k=>L['dash.'+k];
+function setK(k,v){try{L['dash.'+k]=v}catch{toast('الصورة كبيرة، جرّب صورة أصغر')}applySet()}
+function applySet(){const h=document.documentElement,t=g('theme')||'auto';h.dataset.theme=t;h.dataset.eff=t=='auto'?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t;h.dataset.grad=g('grad')=='0'?'off':'on';h.style.setProperty('--gc',g('gc')||'#3b9de8');h.style.setProperty('--go',(g('go')||100)+'%');h.style.setProperty('--gob',(g('go')||100)/100);const b=$('#bgi');b.style.backgroundImage=g('bg')?`url(${g('bg')})`:'none';b.style.filter=`blur(${g('bgb')||0}px)`;b.style.opacity=g('bg')?(g('bgo')||100)/100:0}
+const sg=(k,o,d)=>`<div class="seg" style="margin-bottom:16px">${o.map(t=>`<button class="${(g(k)||d)==t[0]?'on':''}" onclick="setK('${k}','${t[0]}');render()">${t[1]}</button>`).join('')}</div>`;
+const sSheet=()=>`<div class="hd"><h3 style="margin:0">الإعدادات</h3>${xb}</div><div class="lb">المظهر</div>${sg('theme',[['auto','تلقائي'],['light','فاتح'],['dark','داكن']],'auto')}<div class="lb">خلفية متدرجة</div>${sg('grad',[['1','مفعّلة'],['0','معطّلة']],'1')}
+<div class="lb">لون التدرج</div><div class="acts" style="margin-bottom:16px;flex-wrap:wrap">${['#3b9de8','#30d158','#bf5af2','#ff9f0a','#ff453a','#64d2ff'].map(c=>`<button class="sw" style="background:${c}" aria-label="${c}" onclick="setK('gc','${c}');render()"></button>`).join('')}<input type="color" value="${g('gc')||'#3b9de8'}" oninput="setK('gc',this.value)" aria-label="لون مخصص" style="width:44px;height:34px;border:0;background:none;padding:0"></div>
+<div class="lb">صورة خلفية من الجهاز</div><div class="acts" style="margin-bottom:12px"><input type="file" accept="image/*" class="in" onchange="bgPick(this)">${g('bg')?`<button class="b d" onclick="delete L['dash.bg'];applySet();render()">إزالة</button>`:''}</div>
+<div class="lb">الضبابية</div><input type="range" min="0" max="40" value="${g('bgb')||0}" oninput="setK('bgb',this.value)" style="width:100%;margin-bottom:12px"><div class="lb">الوضوح</div><input type="range" min="0" max="100" value="${g('bgo')||100}" oninput="setK('bgo',this.value)" style="width:100%">
+<div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><p class="sub" style="margin-top:16px">كل البيانات والملفات محفوظة على هذا المتصفح فقط، فاستخدم نفس المتصفح دائماً.</p>`;
+const openS=()=>{stack.push(sSheet);render()},bgPick=i=>i.files[0]&&rs(i.files[0],2000,d=>{setK('bg',d);render()});
+function init(){try{applySet();$('#si').innerHTML=ic('search');$('#gb').innerHTML=ic('gear');$('.nv').innerHTML=[['home','الرئيسية','home'],['clients','العملاء','user'],['projects','المشاريع','film'],['archive','المحفوظات','archive']].map(x=>`<button data-v="${x[0]}" onclick="go('${x[0]}')">${ic(x[2],18)}${x[1]}</button>`).join('');render()}catch(e){$('#main').innerHTML=`<div class="card"><h3>تعذّر تحميل البيانات</h3><p class="sub">${E(e.message)}</p><button class="b p" onclick="init()">إعادة المحاولة</button></div>`}}
+applySet();matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{applySet();render()});onkeydown=e=>{if(e.key=='Escape'&&stack.length)pop()};setTimeout(init,300);
+</script>
 </body>
-
 </html>
-
