@@ -6,6 +6,9 @@
 <title>لوحة تحكم الموشن</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <style>
 :root{--bg:#fff;--ink:#1d1d1f;--sub:#6e6e73;--g:rgba(255,255,255,.55);--g2:rgba(255,255,255,.35);--st:rgba(255,255,255,.7);--hi:rgba(255,255,255,.8);--tint:#0a84ff;--ok:#30b45a;--warn:#ff9f0a;--bad:#ff453a;--sh:0 10px 40px rgba(40,60,140,.14);--gt:color-mix(in srgb,var(--gc,#3b9de8) 45%,#fff);--gg:color-mix(in srgb,var(--g) var(--go,100%),transparent);--gg2:color-mix(in srgb,var(--g2) var(--go,100%),transparent)}
 [data-eff=dark]{--bg:#000;--ink:#f5f5f7;--sub:#a1a1a6;--g:rgba(44,44,56,.5);--g2:rgba(70,70,88,.35);--st:rgba(255,255,255,.12);--hi:rgba(255,255,255,.14);--ok:#32d74b;--sh:0 10px 40px rgba(0,0,0,.5);--gt:color-mix(in srgb,var(--gc,#3b9de8) 20%,#000)}
@@ -75,51 +78,6 @@ textarea.in{padding:12px 14px;line-height:1.8;resize:vertical}
 @keyframes sk{to{background-position:-200% 0}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-
-<!-- استدعاء وحدات Firebase عبر CDN -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-
-  // إعدادات Firebase الخاصة بك
-  const firebaseConfig = {
-    apiKey: "AIzaSyBCS0eZxI_ICC0-gBxvy4O5r8bqpDl_THM",
-    authDomain: "links-ae0ca.firebaseapp.com",
-    databaseURL: "https://links-ae0ca-default-rtdb.firebaseio.com",
-    projectId: "links-ae0ca",
-    storageBucket: "links-ae0ca.firebasestorage.app",
-    messagingSenderId: "156091937139",
-    appId: "1:156091937139:web:e97329efa9d81535b1d506",
-    measurementId: "G-DFGGM61SDT"
-  };
-
-  // تهيئة Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const dbRealtime = getDatabase(app);
-  const dbRef = ref(dbRealtime, 'dashData');
-
-  // ربط Firebase مع متغيرات التطبيق
-  window.saveToFirebase = function(data) {
-    set(dbRef, data).catch(err => {
-      console.error("خطأ أثناء الحفظ في Firebase:", err);
-    });
-  };
-
-  // الاستماع للتغييرات المباشرة في Firebase Realtime Database
-  onValue(dbRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val) {
-      window.D = {
-        clients: val.clients || [],
-        projects: val.projects || []
-      };
-      try { localStorage['dash.data'] = JSON.stringify(window.D); } catch(e){}
-      if (typeof window.render === 'function') window.render();
-    }
-  });
-</script>
 </head>
 <body>
 <div id="bgi"></div>
@@ -136,21 +94,10 @@ const P={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',plus
 const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
 const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const TYPES=['موشن جرافيك','مونتاج فيديو','لوجو أنيميشن','إنفوجرافيك','إعلان','فيديو شرح','تصميم ثابت','أخرى'],CATS=['شركة','وكالة','مؤسسة','ستارت أب','فرد'],CLS=[['VIP','--warn'],['منتظم','--ok'],['جديد','--tint'],['محتمل','--sub']],COL=['#0a84ff','#30d158','#bf5af2','#ff9f0a','#ff453a','#64d2ff'];
-window.D=JSON.parse(L['dash.data']||'null')||{clients:[],projects:[]};
-let view='home',q='',stack=[],charts=[],pt='script',cur,back='projects',FS,lastN=0;const U={};
-
-// الحفظ في LocalStorage وفي Firebase
-const save=()=>{
-  try{
-    L['dash.data']=JSON.stringify(window.D);
-  }catch{
-    toast('المساحة ممتلئة، احذف بعض الصور');
-  }
-  if(window.saveToFirebase) {
-    window.saveToFirebase(window.D);
-  }
-};
-
+const norm=d=>{d=d||{};d.clients=d.clients||[];d.projects=(d.projects||[]).map(p=>({tasks:[],links:[],files:[],script:'',notes:'',...p}));return d};
+let fdb,stg,pend=0,ft,D=norm(JSON.parse(L['dash.data']||'null')),view='home',q='',stack=[],charts=[],pt='script',cur,back='projects',FS,lastN=0;const U={};
+const save=()=>{try{L['dash.data']=JSON.stringify(D)}catch{toast('المساحة ممتلئة، احذف بعض الصور')}fsave()};
+function fsave(){if(!fdb)return;pend=1;clearTimeout(ft);ft=setTimeout(()=>fdb.set(JSON.parse(JSON.stringify(D))).then(()=>pend=0).catch(()=>{pend=0;toast('تعذّر الحفظ على Firebase، راجع الاتصال وقواعد قاعدة البيانات')}),400)}
 const uid=()=>Math.random().toString(36).slice(2,9),cl=id=>D.clients.find(c=>c.id==id),pr=id=>D.projects.find(p=>p.id==id);
 const money=n=>(+n||0).toLocaleString('ar-EG')+' ج.م',dleft=d=>d?Math.round((new Date(d+'T00:00')-new Date().setHours(0,0,0,0))/864e5):null;
 const empty=m=>`<div class="sub" style="padding:20px;text-align:center">${m}</div>`,hd=(t,b)=>`<div class="hd"><h2>${t}</h2>${b}</div>`;
@@ -185,12 +132,11 @@ function home(){
  if(byC.length)charts.push(new Chart($('#c1'),{type:'bar',data:{labels:byC.map(x=>x[0]),datasets:[{data:byC.map(x=>x[1]),backgroundColor:COL,borderRadius:7}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(128,128,128,.18)'}},x:{grid:{display:false}}}}}));
  charts.push(new Chart($('#c2'),{type:'doughnut',data:{labels:Object.keys(byT),datasets:[{data:Object.values(byT),backgroundColor:COL,borderWidth:0}]},options:{maintainAspectRatio:false,cutout:'70%',plugins:{legend:{position:'bottom'}}}}));
 }
-const V={home,proj:()=>$('#main').innerHTML=projPage(pr(cur)),clients:()=>$('#main').innerHTML=hd('العملاء',`<button class="b p" onclick="editClient()">${ic('plus')} عميل جديد</button>`)+secC(D.clients),projects:()=>$('#main').innerHTML=hd('المشاريع',`<button class="b p" onclick="newProj()">${ic('plus')} مشروع جديد</button>`)+secP(D.projects.filter(p=>p.status!='done').reverse()),archive:()=>$('#main').innerHTML=hd('المشاريع المحفوظة','')+secP(D.projects.filter(p=>p.status=='done').reverse())};
+const V={home,proj:()=>{if(!pr(cur)){view=back;return draw()}$('#main').innerHTML=projPage(pr(cur))},clients:()=>$('#main').innerHTML=hd('العملاء',`<button class="b p" onclick="editClient()">${ic('plus')} عميل جديد</button>`)+secC(D.clients),projects:()=>$('#main').innerHTML=hd('المشاريع',`<button class="b p" onclick="newProj()">${ic('plus')} مشروع جديد</button>`)+secP(D.projects.filter(p=>p.status!='done').reverse()),archive:()=>$('#main').innerHTML=hd('المشاريع المحفوظة','')+secP(D.projects.filter(p=>p.status=='done').reverse())};
 function draw(){charts.forEach(c=>c.destroy());charts=[];document.querySelectorAll('.nv button').forEach(b=>b.classList.toggle('on',b.dataset.v==view&&!q.trim()));const s=q.trim().toLowerCase();
  if(s){const h=x=>JSON.stringify({...x,logo:0}).toLowerCase();$('#main').innerHTML=hd('نتائج البحث','')+`<div class="lb">العملاء</div>`+secC(D.clients.filter(c=>h(c).includes(s)))+`<div style="height:14px"></div>`+secP(D.projects.filter(p=>(h(p)+(cl(p.client)?.name||'').toLowerCase()).includes(s)),'المشاريع');return}V[view]()}
 function render(){const y=scrollY;draw();if(view=='proj')scrollTo(0,y);const o=$('#ov'),st=o.firstChild?o.firstChild.scrollTop:0;if(!stack.length){o.className='';o.innerHTML='';lastN=0;return}o.className='on';o.innerHTML=`<div class="sh" role="dialog">${stack[stack.length-1]()}</div>`;o.firstChild.scrollTop=lastN==stack.length?st:0;lastN=stack.length;
- document.querySelectorAll('[data-f]').forEach(async e=>{const id=e.dataset.f;if(!U[id]){const b=await getF(id);if(!b)return;U[id]=URL.createObjectURL(b)}e.src=U[id]})}
-window.render = render;
+ document.querySelectorAll('[data-f]').forEach(async e=>{if(e.getAttribute('src'))return;const id=e.dataset.f;if(!U[id]){const b=await getF(id);if(!b)return;U[id]=URL.createObjectURL(b)}e.src=U[id]})}
 const go=v=>{view=v;q='';$('#q').value='';stack=[];render()},pop=()=>{stack.pop();render()},xb=`<button class="b ib" onclick="pop()" aria-label="إغلاق">${ic('x')}</button>`;
 const oc=id=>{stack.push(cSheet(id));render()},op=id=>{if(view!='proj')back=view;cur=id;view='proj';stack=[];q='';$('#q').value='';scrollTo(0,0);render()};
 /* نماذج */
@@ -225,24 +171,27 @@ function panel(p,pt){const i=p.id,rm=(f,a)=>`<button class="b ib d" onclick="${f
  if(pt=='script'||pt=='notes'){const k=pt;return `<textarea class="in" rows="${k=='script'?18:7}" placeholder="${k=='script'?'اكتب السكريبت أو السيناريو هنا':'اكتب ملاحظات العميل هنا'}" oninput="pr('${i}').${k}=this.value;save()">${E(p[k])}</textarea>`}
  if(pt=='tasks'){const T=p.tasks,dn=T.filter(t=>t.done).length;return `<div class="acts" style="margin-bottom:12px"><input id="nt" class="in" placeholder="مشهد أو مهمة جديدة" onkeydown="if(event.key=='Enter')addT('${i}')"><button class="b p" onclick="addT('${i}')" aria-label="إضافة">${ic('plus')}</button></div>${T.length?`<div class="pg"><i style="width:${dn/T.length*100}%"></i></div><div class="s" style="margin-top:6px">${dn} من ${T.length} مكتملة</div>`:empty('قسّم المشروع لمشاهد ومهام صغيرة')}${T.map(t=>`<div class="row"><button class="ck${t.done?' on':''}" onclick="tg('${i}','${t.id}')" aria-label="تم">${t.done?ic('check',16):''}</button><div class="grow" style="${t.done?'text-decoration:line-through;color:var(--sub)':''}">${E(t.t)}</div>${rm('rmT',t.id)}</div>`).join('')}`}
  if(pt=='links')return `<button class="b p" onclick="addL('${i}')">${ic('plus')} رابط جديد</button>${p.links.length?'':empty('أضف روابط الدرايف واليوتيوب والموقع للوصول السريع')}${p.links.map(l=>{const k=lk(l.u);return `<div class="row"><a class="acts grow" href="${E(k.u)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;min-width:0"><span class="av" style="--c:${k.c}">${ic(k.i)}</span><div class="grow"><div class="t">${E(l.t||k.t)}</div><div class="s" dir="ltr" style="text-align:right">${k.t} · ${E(k.h)}</div></div></a>${rm('rmL',l.id)}</div>`}).join('')}`;
- return `<label class="b p">${ic('upload')} رفع ملفات<input type="file" multiple accept="image/*,video/*,audio/*" hidden onchange="upF('${i}',this)"></label>${p.files.length?'':empty('ارفع صور وفيديو وصوت من جهازك')}<div class="grid" style="margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">${p.files.map(f=>`<div class="card" style="padding:10px">${f.type.startsWith('image')?`<img data-f="${f.id}" alt="" style="width:100%;border-radius:14px;max-height:160px;object-fit:cover">`:f.type.startsWith('video')?`<video data-f="${f.id}" controls style="width:100%;border-radius:14px"></video>`:`<audio data-f="${f.id}" controls style="width:100%"></audio>`}<div class="acts" style="margin-top:8px"><div class="s grow" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${E(f.name)}</div>${rm('rmF',f.id)}</div></div>`).join('')}</div>`}
+ return `<label class="b p">${ic('upload')} رفع ملفات<input type="file" multiple accept="image/*,video/*,audio/*" hidden onchange="upF('${i}',this)"></label>${p.files.length?'':empty('ارفع صور وفيديو وصوت من جهازك')}<div class="grid" style="margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">${p.files.map(f=>`<div class="card" style="padding:10px">${f.type.startsWith('image')?`<img data-f="${f.id}" src="${E(f.url||'')}" alt="" style="width:100%;border-radius:14px;max-height:160px;object-fit:cover">`:f.type.startsWith('video')?`<video data-f="${f.id}" src="${E(f.url||'')}" controls style="width:100%;border-radius:14px"></video>`:`<audio data-f="${f.id}" src="${E(f.url||'')}" controls style="width:100%"></audio>`}<div class="acts" style="margin-top:8px"><div class="s grow" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${E(f.name)}</div>${rm('rmF',f.id)}</div></div>`).join('')}</div>`}
 function addT(id){const v=$('#nt').value.trim();if(!v)return;pr(id).tasks.push({id:uid(),t:v,done:0});save();render();setTimeout(()=>$('#nt')?.focus())}
 const tg=(p,t)=>{const x=pr(p).tasks.find(x=>x.id==t);x.done=!x.done;save();render()},rmT=(p,t)=>del('تم حذف المهمة',()=>pr(p).tasks=pr(p).tasks.filter(x=>x.id!=t)),rmL=(p,t)=>del('تم حذف الرابط',()=>pr(p).links=pr(p).links.filter(x=>x.id!=t));
-const rmF=(p,f)=>{del('تم حذف الملف',()=>pr(p).files=pr(p).files.filter(x=>x.id!=f));setTimeout(()=>{if(!JSON.stringify(D).includes(f))delF(f)},6500)};
+const rmF=(p,f)=>{const m=pr(p).files.find(x=>x.id==f);del('تم حذف الملف',()=>pr(p).files=pr(p).files.filter(x=>x.id!=f));setTimeout(()=>{if(!JSON.stringify(D).includes(f)){delF(f);if(m&&m.path&&stg)stg.ref(m.path).delete().catch(()=>{})}},6500)};
 const addL=id=>form('رابط جديد',[{k:'t',l:'اسم الرابط (اختياري)'},{k:'u',l:'الرابط',t:'url',r:1}],{},v=>pr(id).links.push({id:uid(),...v}));
-async function upF(id,i){const p=pr(id);for(const f of i.files){const k=uid();await putF(k,f);p.files.push({id:k,name:f.name,type:f.type||'audio/x',size:f.size})}save();render()}
+async function upF(id,i){toast('جاري رفع الملفات…');for(const f of i.files){const k=uid(),path=`motion/${id}/${k}_${f.name}`;try{const r=stg.ref(path);await r.put(f);pr(id).files.push({id:k,name:f.name,type:f.type||'audio/x',size:f.size,url:await r.getDownloadURL(),path})}catch(e){toast('تعذّر رفع '+f.name)}}save();render();toast('تم رفع الملفات')}
 function fin(id){const p=pr(id),d=p.status=='done';p.status=d?'active':'done';p.doneAt=Date.now();save();if(!d){view=back;stack=[];render();toast('اكتمل المشروع وتم حفظه في المحفوظات')}else render()}
 /* الإعدادات */
 const g=k=>L['dash.'+k];
 function setK(k,v){try{L['dash.'+k]=v}catch{toast('الصورة كبيرة، جرّب صورة أصغر')}applySet()}
 function applySet(){const h=document.documentElement,t=g('theme')||'auto';h.dataset.theme=t;h.dataset.eff=t=='auto'?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t;h.dataset.grad=g('grad')=='0'?'off':'on';h.style.setProperty('--gc',g('gc')||'#3b9de8');h.style.setProperty('--go',(g('go')||100)+'%');h.style.setProperty('--gob',(g('go')||100)/100);const b=$('#bgi');b.style.backgroundImage=g('bg')?`url(${g('bg')})`:'none';b.style.filter=`blur(${g('bgb')||0}px)`;b.style.opacity=g('bg')?(g('bgo')||100)/100:0}
-const sg=(k,o,d)=>`<div class="seg" style="margin-bottom:16px">${o.map(t=>`<button class="${(g(k)\vert{}\vert{}d)==t[0]?'on':''}" onclick="setK('${k}','${t[0]}');render()">${t[1]}</button>`).join('')}</div>`;
+const sg=(k,o,d)=>`<div class="seg" style="margin-bottom:16px">${o.map(t=>`<button class="${(g(k)||d)==t[0]?'on':''}" onclick="setK('${k}','${t[0]}');render()">${t[1]}</button>`).join('')}</div>`;
 const sSheet=()=>`<div class="hd"><h3 style="margin:0">الإعدادات</h3>${xb}</div><div class="lb">المظهر</div>${sg('theme',[['auto','تلقائي'],['light','فاتح'],['dark','داكن']],'auto')}<div class="lb">خلفية متدرجة</div>${sg('grad',[['1','مفعّلة'],['0','معطّلة']],'1')}
 <div class="lb">لون التدرج</div><div class="acts" style="margin-bottom:16px;flex-wrap:wrap">${['#3b9de8','#30d158','#bf5af2','#ff9f0a','#ff453a','#64d2ff'].map(c=>`<button class="sw" style="background:${c}" aria-label="${c}" onclick="setK('gc','${c}');render()"></button>`).join('')}<input type="color" value="${g('gc')||'#3b9de8'}" oninput="setK('gc',this.value)" aria-label="لون مخصص" style="width:44px;height:34px;border:0;background:none;padding:0"></div>
 <div class="lb">صورة خلفية من الجهاز</div><div class="acts" style="margin-bottom:12px"><input type="file" accept="image/*" class="in" onchange="bgPick(this)">${g('bg')?`<button class="b d" onclick="delete L['dash.bg'];applySet();render()">إزالة</button>`:''}</div>
 <div class="lb">الضبابية</div><input type="range" min="0" max="40" value="${g('bgb')||0}" oninput="setK('bgb',this.value)" style="width:100%;margin-bottom:12px"><div class="lb">الوضوح</div><input type="range" min="0" max="100" value="${g('bgo')||100}" oninput="setK('bgo',this.value)" style="width:100%">
-<div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><p class="sub" style="margin-top:16px">بيانات التطبيق مزامنة سحابياً عبر Firebase ومتوفرة من أي جهاز.</p>`;
+<div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><p class="sub" style="margin-top:16px">كل البيانات والملفات محفوظة على هذا المتصفح فقط، فاستخدم نفس المتصفح دائماً.</p>`;
 const openS=()=>{stack.push(sSheet);render()},bgPick=i=>i.files[0]&&rs(i.files[0],2000,d=>{setK('bg',d);render()});
+const FBCFG={apiKey:"AIzaSyBCS0eZxI_ICC0-gBxvy4O5r8bqpDl_THM",authDomain:"links-ae0ca.firebaseapp.com",databaseURL:"https://links-ae0ca-default-rtdb.firebaseio.com",projectId:"links-ae0ca",storageBucket:"links-ae0ca.firebasestorage.app",messagingSenderId:"156091937139",appId:"1:156091937139:web:e97329efa9d81535b1d506",measurementId:"G-DFGGM61SDT"};
+try{if(window.firebase){firebase.initializeApp(FBCFG);fdb=firebase.database().ref('motionDashboard');stg=firebase.storage();
+ fdb.on('value',s=>{if(pend)return;const v=s.val();if(v==null){if(D.clients.length||D.projects.length)fsave();return}D=norm(v);try{L['dash.data']=JSON.stringify(D)}catch{}render()},()=>toast('تعذّر الاتصال بـ Firebase، راجع قواعد قاعدة البيانات'))}}catch(e){console.error(e)}
 function init(){try{applySet();$('#si').innerHTML=ic('search');$('#gb').innerHTML=ic('gear');$('.nv').innerHTML=[['home','الرئيسية','home'],['clients','العملاء','user'],['projects','المشاريع','film'],['archive','المحفوظات','archive']].map(x=>`<button data-v="${x[0]}" onclick="go('${x[0]}')">${ic(x[2],18)}${x[1]}</button>`).join('');render()}catch(e){$('#main').innerHTML=`<div class="card"><h3>تعذّر تحميل البيانات</h3><p class="sub">${E(e.message)}</p><button class="b p" onclick="init()">إعادة المحاولة</button></div>`}}
 applySet();matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{applySet();render()});onkeydown=e=>{if(e.key=='Escape'&&stack.length)pop()};setTimeout(init,300);
 </script>
