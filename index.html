@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
@@ -107,7 +107,7 @@ const TYPES=['موشن جرافيك','مونتاج فيديو','لوجو أني�
 const norm=d=>{d=d||{};d.clients=d.clients||[];d.projects=(d.projects||[]).map(p=>({tasks:[],links:[],files:[],script:'',notes:'',...p}));return d};
 let fdb,stg,pend=0,ft,D=norm(JSON.parse(L['dash.data']||'null')),view='home',q='',stack=[],charts=[],pt='script',cur,back='projects',FS,lastN=0;const U={};
 const save=()=>{try{L['dash.data']=JSON.stringify(D)}catch{toast('المساحة ممتلئة، احذف بعض الصور')}fsave()};
-function fsave(){if(!fdb)return;pend=1;clearTimeout(ft);ft=setTimeout(()=>fdb.set(JSON.parse(JSON.stringify(D))).then(()=>pend=0).catch(()=>{pend=0;toast('تعذّر الحفظ على Firebase، راجع الاتصال وقواعد قاعدة البيانات')}),400)}
+function fsave(){if(!fs)return;pend=1;const v=++ver;clearTimeout(ft);ft=setTimeout(async()=>{try{const b=fs.batch(),nl={clients:{},projects:{}};let n=0;for(const[k,a]of[['clients',D.clients],['projects',D.projects]]){a.forEach(x=>{const j=sj(x);nl[k][x.id]=j;if(last[k][x.id]!==j){b.set(col(k).doc(x.id),JSON.parse(JSON.stringify(x)));n++}});for(const id in last[k])if(!(id in nl[k])){b.delete(col(k).doc(id));n++}}if(n)await b.commit();last=nl}catch(e){console.error(e);toast('تعذّر الحفظ على Firestore، راجع الاتصال والقواعد')}if(v==ver)pend=0},400)}
 const uid=()=>Math.random().toString(36).slice(2,9),cl=id=>D.clients.find(c=>c.id==id),pr=id=>D.projects.find(p=>p.id==id);
 const money=n=>(+n||0).toLocaleString('ar-EG')+' ج.م',dleft=d=>d?Math.round((new Date(d+'T00:00')-new Date().setHours(0,0,0,0))/864e5):null;
 const empty=m=>`<div class="sub" style="padding:20px;text-align:center">${m}</div>`,hd=(t,b)=>`<div class="hd"><h2>${t}</h2>${b}</div>`;
@@ -200,12 +200,18 @@ const sSheet=()=>`<div class="hd"><h3 style="margin:0">الإعدادات</h3>${
 <div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><div class="acts" style="margin-top:16px"><div class="sub grow" dir="ltr" style="text-align:right">${E(window.firebase&&firebase.auth().currentUser?.email||'')}</div><button class="b d" onclick="logout()">تسجيل الخروج</button></div><p class="sub" style="margin-top:12px">البيانات محفوظة على Firebase ومتزامنة بين أجهزتك.</p>`;
 const openS=()=>{stack.push(sSheet);render()},bgPick=i=>i.files[0]&&rs(i.files[0],2000,d=>{setK('bg',d);render()});
 const FBCFG={apiKey:"AIzaSyBCS0eZxI_ICC0-gBxvy4O5r8bqpDl_THM",authDomain:"links-ae0ca.firebaseapp.com",databaseURL:"https://links-ae0ca-default-rtdb.firebaseio.com",projectId:"links-ae0ca",storageBucket:"links-ae0ca.firebasestorage.app",messagingSenderId:"156091937139",appId:"1:156091937139:web:e97329efa9d81535b1d506",measurementId:"G-DFGGM61SDT"};
-function startDB(){fdb=firebase.database().ref('motionDashboard');fdb.on('value',s=>{if(pend)return;const v=s.val();if(v==null){if(D.clients.length||D.projects.length)fsave();return}D=norm(v);try{L['dash.data']=JSON.stringify(D)}catch{}render()},()=>toast('تعذّر الاتصال بـ Firebase، راجع صلاحيات القاعدة'))}
-function stopDB(){if(fdb)fdb.off();fdb=null;clearTimeout(ft);pend=0}
+let fs,uid,unsub=[],ver=0,last={clients:{},projects:{}};
+const col=k=>fs.collection('users').doc(uid).collection(k),sj=x=>JSON.stringify(x,(k,v)=>v&&typeof v=='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(q=>[q,v[q]])):v);
+function startDB(u){fs=firebase.firestore();uid=u.uid;const got={};let first=1;
+ unsub=['clients','projects'].map(k=>col(k).onSnapshot(sn=>{if(pend)return;got[k]=sn.docs.map(d=>d.data());last[k]=Object.fromEntries(got[k].map(x=>[x.id,sj(x)]));if(!got.clients||!got.projects)return;
+  if(first&&!got.clients.length&&!got.projects.length&&(D.clients.length||D.projects.length)){first=0;last={clients:{},projects:{}};fsave();return}
+  first=0;const by=(a,b)=>(a.created||0)-(b.created||0),nd=norm({clients:got.clients.sort(by),projects:got.projects.sort(by)});
+  if(sj(nd)==sj(D))return;D=nd;try{L['dash.data']=JSON.stringify(D)}catch{}render()},()=>toast('تعذّر الاتصال بـ Firestore، راجع القواعد')))}
+function stopDB(){unsub.forEach(f=>f());unsub=[];fs=null;clearTimeout(ft);pend=0;last={clients:{},projects:{}}}
 async function login(e){e.preventDefault();const b=$('#lbtn'),er=$('#lerr'),M={'auth/invalid-credential':'الإيميل أو كلمة المرور غير صحيحة','auth/wrong-password':'الإيميل أو كلمة المرور غير صحيحة','auth/user-not-found':'الإيميل أو كلمة المرور غير صحيحة','auth/invalid-email':'الإيميل غير صالح','auth/too-many-requests':'محاولات كتير، جرّب بعد شوية','auth/network-request-failed':'تأكد من اتصال الإنترنت','auth/operation-not-allowed':'فعّل تسجيل الدخول بالإيميل من Firebase Authentication'};er.textContent='';b.disabled=true;try{await firebase.auth().signInWithEmailAndPassword($('#le').value.trim(),$('#lp').value);$('#lp').value=''}catch(x){er.textContent=M[x.code]||'تعذّر تسجيل الدخول ('+x.code+')'}b.disabled=false;return false}
 async function logout(){await firebase.auth().signOut();delete L['dash.data'];D=norm(null);stack=[];view='home';render()}
 $('#li').innerHTML=ic('user');
-try{if(window.firebase){firebase.initializeApp(FBCFG);stg=firebase.storage();firebase.auth().onAuthStateChanged(u=>{if(u){document.body.className='in';startDB()}else{stopDB();stack=[];document.body.className='out';render()}})}else document.body.className='in'}catch(e){console.error(e);document.body.className='in'}
+try{if(window.firebase){firebase.initializeApp(FBCFG);stg=firebase.storage();firebase.auth().onAuthStateChanged(u=>{if(u){document.body.className='in';startDB(u)}else{stopDB();stack=[];document.body.className='out';render()}})}else document.body.className='in'}catch(e){console.error(e);document.body.className='in'}
 function init(){try{applySet();$('#si').innerHTML=ic('search');$('#gb').innerHTML=ic('gear');$('.nv').innerHTML=[['home','الرئيسية','home'],['clients','العملاء','user'],['projects','المشاريع','film'],['archive','المحفوظات','archive']].map(x=>`<button data-v="${x[0]}" onclick="go('${x[0]}')">${ic(x[2],18)}${x[1]}</button>`).join('');render()}catch(e){$('#main').innerHTML=`<div class="card"><h3>تعذّر تحميل البيانات</h3><p class="sub">${E(e.message)}</p><button class="b p" onclick="init()">إعادة المحاولة</button></div>`}}
 applySet();matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{applySet();render()});onkeydown=e=>{if(e.key=='Escape'&&stack.length)pop()};setTimeout(init,300);
 </script>
