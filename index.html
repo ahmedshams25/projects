@@ -200,9 +200,9 @@ const sSheet=()=>`<div class="hd"><h3 style="margin:0">الإعدادات</h3>${
 <div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><div class="acts" style="margin-top:16px"><div class="sub grow" dir="ltr" style="text-align:right">${E(window.firebase&&firebase.auth().currentUser?.email||'')}</div><button class="b d" onclick="logout()">تسجيل الخروج</button></div><p class="sub" style="margin-top:12px">البيانات محفوظة على Firebase ومتزامنة بين أجهزتك.</p>`;
 const openS=()=>{stack.push(sSheet);render()},bgPick=i=>i.files[0]&&rs(i.files[0],2000,d=>{setK('bg',d);render()});
 const FBCFG={apiKey:"AIzaSyBCS0eZxI_ICC0-gBxvy4O5r8bqpDl_THM",authDomain:"links-ae0ca.firebaseapp.com",databaseURL:"https://links-ae0ca-default-rtdb.firebaseio.com",projectId:"links-ae0ca",storageBucket:"links-ae0ca.firebasestorage.app",messagingSenderId:"156091937139",appId:"1:156091937139:web:e97329efa9d81535b1d506",measurementId:"G-DFGGM61SDT"};
-let fs,uid,unsub=[],ver=0,last={clients:{},projects:{}};
-const col=k=>fs.collection('users').doc(uid).collection(k),sj=x=>JSON.stringify(x,(k,v)=>v&&typeof v=='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(q=>[q,v[q]])):v);
-function startDB(u){fs=firebase.firestore();uid=u.uid;const got={};let first=1;
+let fs,fuid,unsub=[],ver=0,last={clients:{},projects:{}};
+const col=k=>fs.collection('users').doc(fuid).collection(k),sj=x=>JSON.stringify(x,(k,v)=>v&&typeof v=='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(q=>[q,v[q]])):v);
+function startDB(u){fs=firebase.firestore();fuid=u.uid;const got={};let first=1;
  unsub=['clients','projects'].map(k=>col(k).onSnapshot(sn=>{if(pend)return;got[k]=sn.docs.map(d=>d.data());last[k]=Object.fromEntries(got[k].map(x=>[x.id,sj(x)]));if(!got.clients||!got.projects)return;
   if(first&&!got.clients.length&&!got.projects.length&&(D.clients.length||D.projects.length)){first=0;last={clients:{},projects:{}};fsave();return}
   first=0;const by=(a,b)=>(a.created||0)-(b.created||0),nd=norm({clients:got.clients.sort(by),projects:got.projects.sort(by)});
