@@ -157,16 +157,16 @@ function home(){
  const cv=(id,ok,m,h)=>ok?`<div class="ch"${h?` style="height:${h}px"`:''}><canvas id="${id}"></canvas></div>`:empty(m),HP=D.projects.length;
  $('#main').innerHTML=`<div class="hd"><div><h2>الرئيسية</h2><div class="s">${n.toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long'})}</div></div><div class="acts"><button class="b" onclick="editClient()">${ic('user')} عميل جديد</button><button class="b p" onclick="newProj()">${ic('plus')} مشروع جديد</button></div></div>
  <div class="kp" style="margin-bottom:14px">${kpi('مشاريع نشطة',A.length,`${mm(D.projects)[0]} جديد هذا الشهر`,'film','#0a84ff')}${kpi('العملاء',D.clients.length,mm(D.clients),'user','#30d158')}${kpi('مهام مفتوحة',OT.length,'في المشاريع النشطة','check','#ff9f0a')}${kpi('تكلفة هذا الشهر',money(mm(D.projects,p=>p.cost)[0]),mm(D.projects,p=>p.cost),'chart','#bf5af2')}</div>
+ <div class="g3">
+  <div class="card">${h2('أقرب مواعيد التسليم','projects')}${up.length?up.map(prow).join(''):emp}</div>
+  <div class="card">${h2('المهام المفتوحة',0,OT.length?` <span class="pill" style="--c:var(--warn)">${OT.length}</span>`:'')}${OT.length?OT.slice(0,5).map(({p,t})=>`<div class="row"><button class="ck" onclick="tg('${p.id}','${t.id}')" aria-label="تم"></button><div class="grow" style="cursor:pointer" onclick="op('${p.id}')"><div class="t">${E(t.t)}</div><div class="s">${E(p.title)}</div></div></div>`).join(''):empty('لا توجد مهام مفتوحة')}</div>
+  <div class="card">${h2('المشاريع المحفوظة','archive',Dn.length?` <span class="pill" style="--c:var(--ok)">${Dn.length}</span>`:'')}${Dn.length?`<div class="s">إجمالي قيمتها ${money(Dn.reduce((s,p)=>s+(+p.cost||0),0))}</div>`+Dn.slice(0,5).map(prow).join(''):empty('لا توجد مشاريع محفوظة بعد، اضغط «اكتمل المشروع» داخل أي مشروع')}</div>
+ </div>
  <div class="card">${h2('نشاط المشاريع · آخر 6 أشهر')}${cv('c0',HP,'يظهر النشاط عند إضافة مشاريع',290)}</div>
  <div class="g3">
   <div class="card">${h2('التكلفة حسب العميل')}${cv('c1',byC.length,'تظهر عند إضافة تكلفة للمشاريع')}</div>
   <div class="card">${h2('أنواع المشاريع')}${cv('c2',HP,'تظهر عند إضافة مشاريع')}</div>
   <div class="card">${h2('حالة المشاريع')}${cv('c3',HP,'تظهر عند إضافة مشاريع')}</div>
- </div>
- <div class="g3">
-  <div class="card">${h2('أقرب مواعيد التسليم','projects')}${up.length?up.map(prow).join(''):emp}</div>
-  <div class="card">${h2('المهام المفتوحة',0,OT.length?` <span class="pill" style="--c:var(--warn)">${OT.length}</span>`:'')}${OT.length?OT.slice(0,5).map(({p,t})=>`<div class="row"><button class="ck" onclick="tg('${p.id}','${t.id}')" aria-label="تم"></button><div class="grow" style="cursor:pointer" onclick="op('${p.id}')"><div class="t">${E(t.t)}</div><div class="s">${E(p.title)}</div></div></div>`).join(''):empty('لا توجد مهام مفتوحة')}</div>
-  <div class="card">${h2('المشاريع المحفوظة','archive',Dn.length?` <span class="pill" style="--c:var(--ok)">${Dn.length}</span>`:'')}${Dn.length?`<div class="s">إجمالي قيمتها ${money(Dn.reduce((s,p)=>s+(+p.cost||0),0))}</div>`+Dn.slice(0,5).map(prow).join(''):empty('لا توجد مشاريع محفوظة بعد، اضغط «اكتمل المشروع» داخل أي مشروع')}</div>
  </div>`;
  if(!window.Chart||!HP)return;
  const cs=getComputedStyle(document.documentElement),sub=cs.getPropertyValue('--sub').trim(),ink=cs.getPropertyValue('--ink').trim();
