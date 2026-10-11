@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 :root{--bg:#fff;--ink:#1d1d1f;--sub:#6e6e73;--g:rgba(255,255,255,.55);--g2:rgba(255,255,255,.35);--st:rgba(255,255,255,.7);--hi:rgba(255,255,255,.8);--tint:#0a84ff;--ok:#30b45a;--warn:#ff9f0a;--bad:#ff453a;--sh:0 10px 40px rgba(40,60,140,.14);--gt:color-mix(in srgb,var(--gc,#3b9de8) 45%,#fff);--gg:color-mix(in srgb,var(--g) var(--go,100%),transparent);--gg2:color-mix(in srgb,var(--g2) var(--go,100%),transparent)}
 [data-eff=dark]{--bg:#000;--ink:#f5f5f7;--sub:#a1a1a6;--g:rgba(44,44,56,.5);--g2:rgba(70,70,88,.35);--st:rgba(255,255,255,.12);--hi:rgba(255,255,255,.14);--ok:#32d74b;--sh:0 10px 40px rgba(0,0,0,.5);--gt:color-mix(in srgb,var(--gc,#3b9de8) 20%,#000)}
@@ -68,6 +69,8 @@ textarea.in{padding:12px 14px;line-height:1.8;resize:vertical}
 @media(min-width:720px){.dg.w{grid-template-columns:repeat(4,1fr)}}
 .pl{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(380px,100%),1fr));column-gap:32px}
 @media(max-width:480px){.pl{grid-template-columns:1fr}}
+.wrap,#lg{display:none}body.in .wrap{display:block}body.out #lg{display:grid}
+#lg{position:fixed;inset:0;place-items:center;padding:20px;z-index:40}.lc{width:100%;max-width:380px;padding:26px;margin:0}
 #ov{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center}#ov.on{display:flex}
 .sh{width:100%;max-width:640px;max-height:92vh;overflow:auto;padding:18px 18px calc(18px + env(safe-area-inset-bottom));border-radius:28px 28px 0 0;background:color-mix(in srgb,var(--bg) 72%,transparent);border:1px solid var(--st);backdrop-filter:blur(calc(30px * var(--gob,1))) saturate(180%);-webkit-backdrop-filter:blur(calc(30px * var(--gob,1))) saturate(180%);box-shadow:var(--sh);animation:up .3s}
 @media(min-width:720px){#ov{align-items:center}.sh{border-radius:28px}}
@@ -82,6 +85,13 @@ textarea.in{padding:12px 14px;line-height:1.8;resize:vertical}
 <body>
 <div id="bgi"></div>
 <div id="toast" role="status"></div>
+<div id="lg"><form class="card lc" onsubmit="return login(event)">
+ <div class="acts" style="margin-bottom:20px"><span class="av" id="li" style="--c:#0a84ff"></span><h2>تسجيل الدخول</h2></div>
+ <label class="f"><span>الإيميل</span><input class="in" id="le" type="email" autocomplete="username" dir="ltr" required></label>
+ <label class="f"><span>كلمة المرور</span><input class="in" id="lp" type="password" autocomplete="current-password" dir="ltr" required></label>
+ <div id="lerr" class="s" role="alert" style="color:var(--bad);min-height:20px;margin-bottom:8px"></div>
+ <button class="b p" id="lbtn" style="width:100%">دخول</button>
+</form></div>
 <div class="wrap">
  <div class="acts" style="margin-bottom:12px"><div class="sr grow"><span id="si"></span><input class="in" id="q" placeholder="ابحث في العملاء والمشاريع والسكريبت والروابط" oninput="q=this.value;render()"></div><button class="b ib" onclick="openS()" aria-label="الإعدادات والمظهر" id="gb"></button></div>
  <nav class="seg nv" style="margin:12px 0 18px"></nav>
@@ -187,11 +197,15 @@ const sSheet=()=>`<div class="hd"><h3 style="margin:0">الإعدادات</h3>${
 <div class="lb">لون التدرج</div><div class="acts" style="margin-bottom:16px;flex-wrap:wrap">${['#3b9de8','#30d158','#bf5af2','#ff9f0a','#ff453a','#64d2ff'].map(c=>`<button class="sw" style="background:${c}" aria-label="${c}" onclick="setK('gc','${c}');render()"></button>`).join('')}<input type="color" value="${g('gc')||'#3b9de8'}" oninput="setK('gc',this.value)" aria-label="لون مخصص" style="width:44px;height:34px;border:0;background:none;padding:0"></div>
 <div class="lb">صورة خلفية من الجهاز</div><div class="acts" style="margin-bottom:12px"><input type="file" accept="image/*" class="in" onchange="bgPick(this)">${g('bg')?`<button class="b d" onclick="delete L['dash.bg'];applySet();render()">إزالة</button>`:''}</div>
 <div class="lb">الضبابية</div><input type="range" min="0" max="40" value="${g('bgb')||0}" oninput="setK('bgb',this.value)" style="width:100%;margin-bottom:12px"><div class="lb">الوضوح</div><input type="range" min="0" max="100" value="${g('bgo')||100}" oninput="setK('bgo',this.value)" style="width:100%">
-<div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><p class="sub" style="margin-top:16px">كل البيانات والملفات محفوظة على هذا المتصفح فقط، فاستخدم نفس المتصفح دائماً.</p>`;
+<div class="lb" style="margin-top:12px">شفافية الزجاج</div><input type="range" min="0" max="100" value="${g('go')||100}" oninput="setK('go',this.value)" style="width:100%"><div class="acts" style="margin-top:16px"><div class="sub grow" dir="ltr" style="text-align:right">${E(window.firebase&&firebase.auth().currentUser?.email||'')}</div><button class="b d" onclick="logout()">تسجيل الخروج</button></div><p class="sub" style="margin-top:12px">البيانات محفوظة على Firebase ومتزامنة بين أجهزتك.</p>`;
 const openS=()=>{stack.push(sSheet);render()},bgPick=i=>i.files[0]&&rs(i.files[0],2000,d=>{setK('bg',d);render()});
 const FBCFG={apiKey:"AIzaSyBCS0eZxI_ICC0-gBxvy4O5r8bqpDl_THM",authDomain:"links-ae0ca.firebaseapp.com",databaseURL:"https://links-ae0ca-default-rtdb.firebaseio.com",projectId:"links-ae0ca",storageBucket:"links-ae0ca.firebasestorage.app",messagingSenderId:"156091937139",appId:"1:156091937139:web:e97329efa9d81535b1d506",measurementId:"G-DFGGM61SDT"};
-try{if(window.firebase){firebase.initializeApp(FBCFG);fdb=firebase.database().ref('motionDashboard');stg=firebase.storage();
- fdb.on('value',s=>{if(pend)return;const v=s.val();if(v==null){if(D.clients.length||D.projects.length)fsave();return}D=norm(v);try{L['dash.data']=JSON.stringify(D)}catch{}render()},()=>toast('تعذّر الاتصال بـ Firebase، راجع قواعد قاعدة البيانات'))}}catch(e){console.error(e)}
+function startDB(){fdb=firebase.database().ref('motionDashboard');fdb.on('value',s=>{if(pend)return;const v=s.val();if(v==null){if(D.clients.length||D.projects.length)fsave();return}D=norm(v);try{L['dash.data']=JSON.stringify(D)}catch{}render()},()=>toast('تعذّر الاتصال بـ Firebase، راجع صلاحيات القاعدة'))}
+function stopDB(){if(fdb)fdb.off();fdb=null;clearTimeout(ft);pend=0}
+async function login(e){e.preventDefault();const b=$('#lbtn'),er=$('#lerr'),M={'auth/invalid-credential':'الإيميل أو كلمة المرور غير صحيحة','auth/wrong-password':'الإيميل أو كلمة المرور غير صحيحة','auth/user-not-found':'الإيميل أو كلمة المرور غير صحيحة','auth/invalid-email':'الإيميل غير صالح','auth/too-many-requests':'محاولات كتير، جرّب بعد شوية','auth/network-request-failed':'تأكد من اتصال الإنترنت','auth/operation-not-allowed':'فعّل تسجيل الدخول بالإيميل من Firebase Authentication'};er.textContent='';b.disabled=true;try{await firebase.auth().signInWithEmailAndPassword($('#le').value.trim(),$('#lp').value);$('#lp').value=''}catch(x){er.textContent=M[x.code]||'تعذّر تسجيل الدخول ('+x.code+')'}b.disabled=false;return false}
+async function logout(){await firebase.auth().signOut();delete L['dash.data'];D=norm(null);stack=[];view='home';render()}
+$('#li').innerHTML=ic('user');
+try{if(window.firebase){firebase.initializeApp(FBCFG);stg=firebase.storage();firebase.auth().onAuthStateChanged(u=>{if(u){document.body.className='in';startDB()}else{stopDB();stack=[];document.body.className='out';render()}})}else document.body.className='in'}catch(e){console.error(e);document.body.className='in'}
 function init(){try{applySet();$('#si').innerHTML=ic('search');$('#gb').innerHTML=ic('gear');$('.nv').innerHTML=[['home','الرئيسية','home'],['clients','العملاء','user'],['projects','المشاريع','film'],['archive','المحفوظات','archive']].map(x=>`<button data-v="${x[0]}" onclick="go('${x[0]}')">${ic(x[2],18)}${x[1]}</button>`).join('');render()}catch(e){$('#main').innerHTML=`<div class="card"><h3>تعذّر تحميل البيانات</h3><p class="sub">${E(e.message)}</p><button class="b p" onclick="init()">إعادة المحاولة</button></div>`}}
 applySet();matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{applySet();render()});onkeydown=e=>{if(e.key=='Escape'&&stack.length)pop()};setTimeout(init,300);
 </script>
